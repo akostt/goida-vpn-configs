@@ -25,7 +25,9 @@ CACHE_DIR = BASE_DIR / ".cache"
 CACHE_FILE = CACHE_DIR / "server_status.json"
 
 MAX_CONCURRENCY = int(os.getenv("VPN_CHECK_MAX_CONCURRENCY", "256"))
-CHECK_TIMEOUT = float(os.getenv("VPN_CHECK_TIMEOUT", "1.5"))
+CHECK_TIMEOUT = float(os.getenv("VPN_CHECK_TIMEOUT", "2.5"))
+RETRY_DELAY = float(os.getenv("VPN_CHECK_RETRY_DELAY", "0.3"))
+MAX_RETRIES = int(os.getenv("VPN_CHECK_MAX_RETRIES", "1"))
 CACHE_TTL_SUCCESS = int(os.getenv("VPN_CACHE_TTL_SUCCESS", "3600"))
 CACHE_TTL_FAILURE = int(os.getenv("VPN_CACHE_TTL_FAILURE", "900"))
 
@@ -126,16 +128,53 @@ def cache_entry_valid(entry: CacheEntry) -> bool:
 
 
 async def _check_server_async(host: str, port: int, semaphore: asyncio.Semaphore) -> bool:
+    """Проверяет доступность VPN сервера с повторными попытками и улучшенной обработкой ошибок."""
     async with semaphore:
-        try:
-            conn = asyncio.open_connection(host, port)
-            reader, writer = await asyncio.wait_for(conn, timeout=CHECK_TIMEOUT)
-            writer.close()
-            with contextlib.suppress(Exception):
-                await writer.wait_closed()
-            return True
-        except Exception:
-            return False
+        for attempt in range(MAX_RETRIES + 1):
+            try:
+                # Попытка установить TCP соединение
+                conn = asyncio.open_connection(host, port)
+                reader, writer = await asyncio.wait_for(conn, timeout=CHECK_TIMEOUT)
+                
+                # Дополнительная проверка: отправляем минимальный байт и проверяем, что соединение активно
+                # Это помогает отфильтровать серверы, которые принимают соединение, но не отвечают
+                try:
+                    writer.write(b"\x00")
+                    await asyncio.wait_for(writer.drain(), timeout=0.5)
+                except (asyncio.TimeoutError, OSError):
+                    # Если не можем отправить данные, сервер скорее всего не работает
+                    writer.close()
+                    with contextlib.suppress(Exception):
+                        await writer.wait_closed()
+                    if attempt < MAX_RETRIES:
+                        await asyncio.sleep(RETRY_DELAY)
+                        continue
+                    return False
+                
+                writer.close()
+                with contextlib.suppress(Exception):
+                    await writer.wait_closed()
+                return True
+                
+            except asyncio.TimeoutError:
+                # Для timeout делаем повторную попытку
+                if attempt < MAX_RETRIES:
+                    await asyncio.sleep(RETRY_DELAY)
+                    continue
+                return False
+                
+            except (ConnectionRefusedError, OSError):
+                # Connection refused - сервер точно не работает, не делаем повторные попытки
+                return False
+                
+            except Exception:
+                # Для других ошибок делаем повторную попытку
+                if attempt < MAX_RETRIES:
+                    await asyncio.sleep(RETRY_DELAY)
+                    continue
+                return False
+        
+        return False
 
 
 async def run_checks(entries):
