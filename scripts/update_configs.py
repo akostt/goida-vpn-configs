@@ -63,9 +63,9 @@ class AppConfig:
 
     tm_filter_prefixes: List[str] = field(
         default_factory=lambda: [
-            "🇷🇺 Yandex",
-            "[🇷🇺] [vl-re",
-            "🇷🇺 Aeza Group LLC",
+            " Yandex",
+            "] [vl-re",
+            " Aeza Group LLC",
         ]
     )
 
@@ -436,7 +436,7 @@ class ConfigFilter:
 
     def _should_add_to_tm(self, line: str) -> bool:
         """Проверяет, нужно ли добавить строку в TM.txt."""
-        return any(line.startswith(prefix) for prefix in self.config.tm_filter_prefixes)
+        return any(prefix in line for prefix in self.config.tm_filter_prefixes)
 
 
 class ConfigDownloader:
