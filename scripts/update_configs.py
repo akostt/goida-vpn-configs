@@ -63,17 +63,12 @@ class AppConfig:
 
     tm_filter_prefixes: List[str] = field(
         default_factory=lambda: [
-            "Finland — ",
-            "] [vl-re",
-            "Aeza Group LLC — ",
-            "Yandex — ",
-            "JSC Selectel —",
-            "Saint-Petersburg ",
-            "Poland — ",
-            "Channel id: @ShadowProxy66",
-            "Germany — ",
-            "Poland — ",
-            "Эстония(Мегафон, T2, Yota-4"
+            "🇷🇺 Yandex — ",
+            "Channel id: @ShadowProxy66 🇷🇺",
+            "[🇷🇺] [vl-re-gr] [",
+            "🇷🇺 Saint-Petersburg ",
+            "💎CIDR💎🇪🇪Эстония(Мегафон, T2, Yota-4🟢)",
+            "🇷🇺 Aeza Group LLC — "
         ]
     )
 
@@ -448,13 +443,13 @@ class ConfigFilter:
         Учитывает как обычные строки, так и URL-encoded версии.
         """
         # Проверяем оригинальную строку
-        if any(prefix in line for prefix in self.config.tm_filter_prefixes):
+        if any(line.startswith(prefix) for prefix in self.config.tm_filter_prefixes):
             return True
         
         # Декодируем URL-encoded строку и проверяем снова
         try:
             decoded_line = unquote(line, encoding='utf-8')
-            return any(prefix in decoded_line for prefix in self.config.tm_filter_prefixes)
+            return any(decoded_line.startswith(prefix) for prefix in self.config.tm_filter_prefixes)
         except Exception:
             # Если декодирование не удалось, возвращаем результат проверки оригинальной строки
             return False
