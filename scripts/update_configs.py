@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Protocol, Tuple
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 import requests
 
@@ -443,8 +443,21 @@ class ConfigFilter:
                 tm_lines.append(server_config.original_line)
 
     def _should_add_to_tm(self, line: str) -> bool:
-        """Проверяет, нужно ли добавить строку в TM.txt."""
-        return any(prefix in line for prefix in self.config.tm_filter_prefixes)
+        """Проверяет, нужно ли добавить строку в TM.txt.
+        
+        Учитывает как обычные строки, так и URL-encoded версии.
+        """
+        # Проверяем оригинальную строку
+        if any(prefix in line for prefix in self.config.tm_filter_prefixes):
+            return True
+        
+        # Декодируем URL-encoded строку и проверяем снова
+        try:
+            decoded_line = unquote(line, encoding='utf-8')
+            return any(prefix in decoded_line for prefix in self.config.tm_filter_prefixes)
+        except Exception:
+            # Если декодирование не удалось, возвращаем результат проверки оригинальной строки
+            return False
 
 
 class ConfigDownloader:
