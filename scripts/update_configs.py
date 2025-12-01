@@ -63,12 +63,15 @@ class AppConfig:
 
     tm_filter_prefixes: List[str] = field(
         default_factory=lambda: [
-            "🇷🇺 Yandex — ",
+            "🇷🇺 Yandex — #",
             "Channel id: @ShadowProxy66 🇷🇺",
             "[🇷🇺] [vl-re-gr] [",
             "🇷🇺 Saint-Petersburg ",
-            "💎CIDR💎🇪🇪Эстония(Мегафон, T2, Yota-4🟢)",
-            "🇷🇺 Aeza Group LLC — "
+            "CIDR",
+            "🇷🇺 Aeza Group LLC — #",
+            "🇷🇺Saint Petersburg(Megafone)",
+            "🇱🇹 Lithuania — #",
+            "🇫🇮 Finland — #"
         ]
     )
 
