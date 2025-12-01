@@ -67,10 +67,9 @@ class AppConfig:
             "Channel id: @ShadowProxy66 🇷🇺",
             "[🇷🇺] [vl-re-gr] [",
             "🇷🇺 Saint-Petersburg ",
-            "CIDR",
+            "💎CIDR💎🇪🇪Эстония(Мегафон, T2, Yota-4🟢)",
             "🇷🇺 Aeza Group LLC — #",
             "🇷🇺Saint Petersburg(Megafone)",
-            "🇱🇹 Lithuania — #",
             "🇫🇮 Finland — #"
         ]
     )
