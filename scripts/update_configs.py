@@ -1,15 +1,33 @@
+import asyncio
 import base64
+import contextlib
 import json
-import socket
+import os
+import time
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple, TypedDict
 from urllib.parse import urlparse
 
 import requests
 
 
+class CacheEntry(TypedDict):
+    status: bool
+    checked_at: float
+
+
+CacheStore = Dict[str, CacheEntry]
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = BASE_DIR / "githubmirror"
+CACHE_DIR = BASE_DIR / ".cache"
+CACHE_FILE = CACHE_DIR / "server_status.json"
+
+MAX_CONCURRENCY = int(os.getenv("VPN_CHECK_MAX_CONCURRENCY", "256"))
+CHECK_TIMEOUT = float(os.getenv("VPN_CHECK_TIMEOUT", "1.5"))
+CACHE_TTL_SUCCESS = int(os.getenv("VPN_CACHE_TTL_SUCCESS", "3600"))
+CACHE_TTL_FAILURE = int(os.getenv("VPN_CACHE_TTL_FAILURE", "900"))
 
 
 CONFIG_URLS = {
@@ -75,31 +93,112 @@ def extract_host_port(line: str) -> Optional[Tuple[str, int]]:
     return None
 
 
-def is_server_alive(host: str, port: int, timeout: int = 3) -> bool:
-    try:
-        with socket.create_connection((host, port), timeout=timeout):
+def load_cache() -> CacheStore:
+    if CACHE_FILE.exists():
+        with CACHE_FILE.open("r", encoding="utf-8") as fh:
+            try:
+                data = json.load(fh)
+                return {
+                    str(k): CacheEntry(
+                        status=bool(v["status"]),
+                        checked_at=float(v["checked_at"]),
+                    )
+                    for k, v in data.items()
+                }
+            except Exception:
+                return {}
+    return {}
+
+
+def save_cache(cache: CacheStore) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    with CACHE_FILE.open("w", encoding="utf-8") as fh:
+        json.dump(cache, fh)
+
+
+def cache_key(host: str, port: int) -> str:
+    return f"{host}:{port}"
+
+
+def cache_entry_valid(entry: CacheEntry) -> bool:
+    ttl = CACHE_TTL_SUCCESS if entry["status"] else CACHE_TTL_FAILURE
+    return (time.time() - entry["checked_at"]) <= ttl
+
+
+async def _check_server_async(host: str, port: int, semaphore: asyncio.Semaphore) -> bool:
+    async with semaphore:
+        try:
+            conn = asyncio.open_connection(host, port)
+            reader, writer = await asyncio.wait_for(conn, timeout=CHECK_TIMEOUT)
+            writer.close()
+            with contextlib.suppress(Exception):
+                await writer.wait_closed()
             return True
-    except OSError:
-        return False
+        except Exception:
+            return False
 
 
-def filter_config_lines(text: str) -> str:
-    result_lines = []
-    for raw_line in text.splitlines():
-        line = raw_line.rstrip("\n")
+async def run_checks(entries):
+    if not entries:
+        return []
 
+    semaphore = asyncio.Semaphore(max(1, min(MAX_CONCURRENCY, len(entries))))
+
+    async def runner(entry):
+        try:
+            status = await _check_server_async(entry["host"], entry["port"], semaphore)
+        except Exception:
+            status = False
+        return entry, status
+
+    tasks = [asyncio.create_task(runner(entry)) for entry in entries]
+    results = []
+    for task in asyncio.as_completed(tasks):
+        results.append(await task)
+    return results
+
+
+def filter_config_lines(text: str, cache: CacheStore) -> str:
+    lines = [raw.rstrip("\n") for raw in text.splitlines()]
+    kept_lines: list[Optional[str]] = [None] * len(lines)
+    to_check = []
+
+    for idx, line in enumerate(lines):
         parsed = extract_host_port(line)
         if parsed is None:
-            # Keep comments, empty lines and unknown formats as-is
-            result_lines.append(line)
+            kept_lines[idx] = line
             continue
 
         host, port = parsed
-        if is_server_alive(host, port):
-            result_lines.append(line)
-        # If server is down, we simply skip this line (do not add to result)
+        key = cache_key(host, port)
+        cached_entry = cache.get(key)
 
-    return "\n".join(result_lines) + "\n"
+        if cached_entry and cache_entry_valid(cached_entry):
+            if cached_entry["status"]:
+                kept_lines[idx] = line
+            continue
+
+        to_check.append(
+            {
+                "idx": idx,
+                "line": line,
+                "host": host,
+                "port": port,
+                "key": key,
+            }
+        )
+
+    if to_check:
+        loop_results = asyncio.run(run_checks(to_check))
+
+        now = time.time()
+        for entry, alive in loop_results:
+            cache[entry["key"]] = {"status": alive, "checked_at": now}
+            if alive:
+                kept_lines[entry["idx"]] = entry["line"]
+
+    filtered = [line for line in kept_lines if line is not None]
+    return "\n".join(filtered) + ("\n" if filtered else "")
 
 
 def ensure_output_dir() -> None:
@@ -108,6 +207,7 @@ def ensure_output_dir() -> None:
 
 def main() -> None:
     ensure_output_dir()
+    cache = load_cache()
 
     for filename, url in CONFIG_URLS.items():
         try:
@@ -117,11 +217,13 @@ def main() -> None:
             print(f"Failed to download {url}: {e}")
             continue
 
-        filtered_text = filter_config_lines(original_text)
+        filtered_text = filter_config_lines(original_text, cache)
 
         output_path = OUTPUT_DIR / filename
         output_path.write_text(filtered_text, encoding="utf-8")
         print(f"Updated {output_path}")
+
+    save_cache(cache)
 
 
 if __name__ == "__main__":
