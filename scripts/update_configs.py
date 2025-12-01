@@ -443,13 +443,13 @@ class ConfigFilter:
         Учитывает как обычные строки, так и URL-encoded версии.
         """
         # Проверяем оригинальную строку
-        if any(line.startswith(prefix) for prefix in self.config.tm_filter_prefixes):
+        if any(prefix in line for prefix in self.config.tm_filter_prefixes):
             return True
         
         # Декодируем URL-encoded строку и проверяем снова
         try:
             decoded_line = unquote(line, encoding='utf-8')
-            return any(decoded_line.startswith(prefix) for prefix in self.config.tm_filter_prefixes)
+            return any(prefix in decoded_line for prefix in self.config.tm_filter_prefixes)
         except Exception:
             # Если декодирование не удалось, возвращаем результат проверки оригинальной строки
             return False
