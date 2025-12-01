@@ -1,412 +1,521 @@
+"""VPN конфигурации фильтр и валидатор.
+
+Скачивает VPN конфигурации из исходного репозитория, проверяет доступность серверов
+и сохраняет только рабочие конфигурации. Также создает специальный файл TM.txt
+с отфильтрованными записями из 26.txt.
+"""
 import asyncio
 import base64
 import contextlib
-import hashlib
 import json
+import logging
 import os
-import ssl
-import struct
 import uuid
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
-from typing import Dict, Optional, Tuple
-from urllib.parse import urlparse, parse_qs
+from typing import Callable, Dict, List, Optional, Protocol, Tuple
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-OUTPUT_DIR = BASE_DIR / "githubmirror"
-
-MAX_CONCURRENCY = int(os.getenv("VPN_CHECK_MAX_CONCURRENCY", "256"))
-CHECK_TIMEOUT = float(os.getenv("VPN_CHECK_TIMEOUT", "2.5"))
-RETRY_DELAY = float(os.getenv("VPN_CHECK_RETRY_DELAY", "0.3"))
-MAX_RETRIES = int(os.getenv("VPN_CHECK_MAX_RETRIES", "1"))
-
-
-CONFIG_URLS = {
-    "6.txt": "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/6.txt",
-    "22.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/22.txt",
-    "23.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/23.txt",
-    "24.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/24.txt",
-    "25.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/25.txt",
-    "26.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/26.txt",
-}
+# Настройка логирования
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 
-def fetch_text(url: str, timeout: int = 15) -> str:
-    resp = requests.get(url, timeout=timeout)
-    resp.raise_for_status()
-    return resp.text
+class ProtocolType(Enum):
+    """Типы VPN протоколов."""
+
+    VMESS = "vmess"
+    VLESS = "vless"
+    TROJAN = "trojan"
+    SHADOWSOCKS = "shadowsocks"
 
 
-def _safe_b64decode(data: str) -> bytes:
-    # add padding if required
-    padding = "=" * (-len(data) % 4)
-    return base64.urlsafe_b64decode(data + padding)
+@dataclass(frozen=True)
+class AppConfig:
+    """Конфигурация приложения."""
+
+    base_dir: Path = field(default_factory=lambda: Path(__file__).resolve().parent.parent)
+    output_dir: Path = field(init=False)
+    max_concurrency: int = field(default_factory=lambda: int(os.getenv("VPN_CHECK_MAX_CONCURRENCY", "256")))
+    check_timeout: float = field(default_factory=lambda: float(os.getenv("VPN_CHECK_TIMEOUT", "2.5")))
+    retry_delay: float = field(default_factory=lambda: float(os.getenv("VPN_CHECK_RETRY_DELAY", "0.3")))
+    max_retries: int = field(default_factory=lambda: int(os.getenv("VPN_CHECK_MAX_RETRIES", "1")))
+    download_timeout: int = field(default_factory=lambda: int(os.getenv("VPN_DOWNLOAD_TIMEOUT", "15")))
+
+    config_urls: Dict[str, str] = field(
+        default_factory=lambda: {
+            "6.txt": "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/6.txt",
+            "22.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/22.txt",
+            "23.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/23.txt",
+            "24.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/24.txt",
+            "25.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/25.txt",
+            "26.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/26.txt",
+        }
+    )
+
+    tm_filter_prefixes: List[str] = field(
+        default_factory=lambda: [
+            "🇷🇺 Yandex",
+            "[🇷🇺] [vl-re",
+            "🇷🇺 Aeza Group LLC",
+        ]
+    )
+
+    tm_source_file: str = "26.txt"
+
+    def __post_init__(self):
+        object.__setattr__(self, "output_dir", self.base_dir / "githubmirror")
 
 
-def parse_vmess(line: str) -> Optional[Tuple[str, int, str, dict]]:
-    """Парсит VMESS конфиг и возвращает (host, port, protocol_type, config)."""
-    try:
-        encoded = line[len("vmess://") :].strip()
-        raw = _safe_b64decode(encoded).decode("utf-8", errors="ignore")
-        cfg = json.loads(raw)
-        host = cfg.get("add")
-        port = int(cfg.get("port"))
-        if host and port:
-            return host, port, "vmess", cfg
-    except Exception:
+@dataclass(frozen=True)
+class ServerConfig:
+    """Конфигурация VPN сервера."""
+
+    host: str
+    port: int
+    protocol_type: ProtocolType
+    config: Dict
+    original_line: str
+
+    def __post_init__(self):
+        """Валидация конфигурации."""
+        if not self.host or not (1 <= self.port <= 65535):
+            raise ValueError(f"Invalid server config: host={self.host}, port={self.port}")
+
+    @property
+    def cache_key(self) -> str:
+        """Ключ для кэширования."""
+        return f"{self.host}:{self.port}"
+
+
+class ConfigParser(ABC):
+    """Абстрактный парсер конфигураций."""
+
+    @abstractmethod
+    def can_parse(self, line: str) -> bool:
+        """Проверяет, может ли парсер обработать строку."""
+        pass
+
+    @abstractmethod
+    def parse(self, line: str) -> Optional[ServerConfig]:
+        """Парсит строку в конфигурацию сервера."""
+        pass
+
+
+class VMessParser(ConfigParser):
+    """Парсер VMESS конфигураций."""
+
+    def can_parse(self, line: str) -> bool:
+        return line.strip().startswith("vmess://")
+
+    def parse(self, line: str) -> Optional[ServerConfig]:
+        try:
+            encoded = line[len("vmess://") :].strip()
+            raw = self._safe_b64decode(encoded).decode("utf-8", errors="ignore")
+            cfg = json.loads(raw)
+            host = cfg.get("add")
+            port = int(cfg.get("port", 0))
+            if host and port:
+                return ServerConfig(host, port, ProtocolType.VMESS, cfg, line)
+        except (ValueError, KeyError, json.JSONDecodeError) as e:
+            logger.debug(f"Failed to parse VMESS config: {e}")
         return None
-    return None
+
+    @staticmethod
+    def _safe_b64decode(data: str) -> bytes:
+        padding = "=" * (-len(data) % 4)
+        return base64.urlsafe_b64decode(data + padding)
 
 
-def parse_vless(line: str) -> Optional[Tuple[str, int, str, dict]]:
-    """Парсит VLESS конфиг и возвращает (host, port, protocol_type, config)."""
-    try:
-        parsed = urlparse(line)
-        if not parsed.hostname or not parsed.port:
-            return None
-        # Извлекаем параметры из query string
-        params = parse_qs(parsed.query)
-        config = {"id": parsed.username} if parsed.username else {}
-        config.update({k: v[0] if v else None for k, v in params.items()})
-        return parsed.hostname, int(parsed.port), "vless", config
-    except Exception:
+class VLessParser(ConfigParser):
+    """Парсер VLESS конфигураций."""
+
+    def can_parse(self, line: str) -> bool:
+        return line.strip().startswith("vless://")
+
+    def parse(self, line: str) -> Optional[ServerConfig]:
+        try:
+            parsed = urlparse(line)
+            if not parsed.hostname or not parsed.port:
+                return None
+            params = parse_qs(parsed.query)
+            config = {"id": parsed.username} if parsed.username else {}
+            config.update({k: v[0] if v else None for k, v in params.items()})
+            return ServerConfig(parsed.hostname, int(parsed.port), ProtocolType.VLESS, config, line)
+        except (ValueError, AttributeError) as e:
+            logger.debug(f"Failed to parse VLESS config: {e}")
         return None
 
 
-def parse_trojan(line: str) -> Optional[Tuple[str, int, str, dict]]:
-    """Парсит Trojan конфиг и возвращает (host, port, protocol_type, config)."""
-    try:
-        parsed = urlparse(line)
-        if not parsed.hostname or not parsed.port:
-            return None
-        config = {"password": parsed.username} if parsed.username else {}
-        params = parse_qs(parsed.query)
-        config.update({k: v[0] if v else None for k, v in params.items()})
-        return parsed.hostname, int(parsed.port), "trojan", config
-    except Exception:
+class TrojanParser(ConfigParser):
+    """Парсер Trojan конфигураций."""
+
+    def can_parse(self, line: str) -> bool:
+        return line.strip().startswith("trojan://")
+
+    def parse(self, line: str) -> Optional[ServerConfig]:
+        try:
+            parsed = urlparse(line)
+            if not parsed.hostname or not parsed.port:
+                return None
+            config = {"password": parsed.username} if parsed.username else {}
+            params = parse_qs(parsed.query)
+            config.update({k: v[0] if v else None for k, v in params.items()})
+            return ServerConfig(parsed.hostname, int(parsed.port), ProtocolType.TROJAN, config, line)
+        except (ValueError, AttributeError) as e:
+            logger.debug(f"Failed to parse Trojan config: {e}")
         return None
 
 
-def parse_shadowsocks(line: str) -> Optional[Tuple[str, int, str, dict]]:
-    """Парсит Shadowsocks конфиг и возвращает (host, port, protocol_type, config)."""
-    try:
-        parsed = urlparse(line)
-        if not parsed.hostname or not parsed.port:
-            return None
-        # SS формат: ss://method:password@host:port
-        if parsed.username:
-            method_password = parsed.username.split(":", 1)
-            if len(method_password) == 2:
-                config = {"method": method_password[0], "password": method_password[1]}
-            else:
-                config = {}
-        else:
+class ShadowsocksParser(ConfigParser):
+    """Парсер Shadowsocks конфигураций."""
+
+    def can_parse(self, line: str) -> bool:
+        return line.strip().startswith("ss://")
+
+    def parse(self, line: str) -> Optional[ServerConfig]:
+        try:
+            parsed = urlparse(line)
+            if not parsed.hostname or not parsed.port:
+                return None
             config = {}
-        return parsed.hostname, int(parsed.port), "shadowsocks", config
-    except Exception:
+            if parsed.username:
+                method_password = parsed.username.split(":", 1)
+                if len(method_password) == 2:
+                    config = {"method": method_password[0], "password": method_password[1]}
+            return ServerConfig(parsed.hostname, int(parsed.port), ProtocolType.SHADOWSOCKS, config, line)
+        except (ValueError, AttributeError) as e:
+            logger.debug(f"Failed to parse Shadowsocks config: {e}")
         return None
 
 
-def extract_host_port(line: str) -> Optional[Tuple[str, int, str, dict]]:
-    """Извлекает host, port, тип протокола и конфиг из строки."""
-    line = line.strip()
-    if not line or line.startswith("#"):
+class ConfigParserRegistry:
+    """Реестр парсеров конфигураций."""
+
+    def __init__(self):
+        self._parsers: List[ConfigParser] = [
+            VMessParser(),
+            VLessParser(),
+            TrojanParser(),
+            ShadowsocksParser(),
+        ]
+
+    def parse(self, line: str) -> Optional[ServerConfig]:
+        """Парсит строку используя подходящий парсер."""
+        line = line.strip()
+        if not line or line.startswith("#"):
+            return None
+
+        for parser in self._parsers:
+            if parser.can_parse(line):
+                return parser.parse(line)
         return None
 
-    if line.startswith("vmess://"):
-        return parse_vmess(line)
 
-    if line.startswith("vless://"):
-        return parse_vless(line)
+class ProtocolChecker(Protocol):
+    """Протокол для проверки VPN протоколов."""
 
-    if line.startswith("trojan://"):
-        return parse_trojan(line)
-
-    if line.startswith("ss://"):
-        return parse_shadowsocks(line)
-
-    # Unknown format — do not attempt to parse
-    return None
+    async def __call__(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, config: Dict
+    ) -> bool:
+        ...
 
 
-def cache_key(host: str, port: int) -> str:
-    """Создает ключ для кэша из host и port."""
-    return f"{host}:{port}"
+class TrojanProtocolChecker:
+    """Проверка Trojan протокола."""
+
+    async def __call__(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, config: Dict
+    ) -> bool:
+        return True  # TLS поверх TCP уже установлен
 
 
-async def _check_trojan_protocol(reader: asyncio.StreamReader, writer: asyncio.StreamWriter, config: dict) -> bool:
-    """Проверяет Trojan протокол через TLS handshake."""
-    try:
-        # Trojan использует TLS, проверяем что сервер отвечает на TLS handshake
-        # Просто проверяем, что соединение активно и может обрабатывать TLS
-        # Полная проверка требует правильного password, но базовая проверка TLS достаточна
-        return True  # Если TCP соединение установлено, TLS должен работать
-    except Exception:
-        return False
+class VMessProtocolChecker:
+    """Проверка VMESS протокола."""
 
-
-async def _check_vmess_protocol(reader: asyncio.StreamReader, writer: asyncio.StreamWriter, config: dict) -> bool:
-    """Проверяет VMESS протокол, отправляя минимальный handshake."""
-    try:
-        # VMESS использует специфичный протокол с версией и UUID
-        # Отправляем минимальный запрос с версией 1
-        # Структура: версия (1 байт) + UUID (16 байт) + дополнительные данные
-        version = b"\x01"
-        # Генерируем случайный UUID для проверки (даже неправильный UUID может вызвать ответ от сервера)
-        test_uuid = uuid.uuid4().bytes
-        request = version + test_uuid + b"\x00" * 8  # Минимальный запрос
-        
-        writer.write(request)
-        await asyncio.wait_for(writer.drain(), timeout=1.0)
-        
-        # Пытаемся прочитать ответ (даже ошибка покажет, что протокол работает)
+    async def __call__(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, config: Dict
+    ) -> bool:
         try:
-            response = await asyncio.wait_for(reader.read(1), timeout=1.0)
-            return len(response) > 0  # Если получили ответ, протокол работает
-        except asyncio.TimeoutError:
-            # Нет ответа, но соединение активно - возможно протокол работает
-            # Для VMESS это нормально, если сервер не отвечает на неправильный запрос
-            return True
-    except Exception:
-        return False
+            version = b"\x01"
+            test_uuid = uuid.uuid4().bytes
+            request = version + test_uuid + b"\x00" * 8
 
+            writer.write(request)
+            await asyncio.wait_for(writer.drain(), timeout=1.0)
 
-async def _check_vless_protocol(reader: asyncio.StreamReader, writer: asyncio.StreamWriter, config: dict) -> bool:
-    """Проверяет VLESS протокол."""
-    try:
-        # VLESS похож на VMESS, но проще
-        # Отправляем минимальный запрос
-        version = b"\x00"  # VLESS версия
-        writer.write(version)
-        await asyncio.wait_for(writer.drain(), timeout=1.0)
-        
-        try:
-            response = await asyncio.wait_for(reader.read(1), timeout=1.0)
-            return len(response) > 0
-        except asyncio.TimeoutError:
-            return True
-    except Exception:
-        return False
-
-
-async def _check_shadowsocks_protocol(reader: asyncio.StreamReader, writer: asyncio.StreamWriter, config: dict) -> bool:
-    """Проверяет Shadowsocks протокол."""
-    try:
-        # Shadowsocks использует шифрование, но мы можем проверить базовую структуру
-        # Отправляем минимальный запрос (зашифрованный заголовок)
-        # Без правильного метода шифрования это не сработает, но проверим что соединение активно
-        test_data = b"\x00" * 16  # Минимальный тестовый пакет
-        writer.write(test_data)
-        await asyncio.wait_for(writer.drain(), timeout=1.0)
-        
-        # Shadowsocks может не ответить сразу, но если соединение активно - протокол может работать
-        return True
-    except Exception:
-        return False
-
-
-async def _check_protocol(protocol_type: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, config: dict) -> bool:
-    """Проверяет конкретный VPN протокол."""
-    try:
-        if protocol_type == "trojan":
-            return await _check_trojan_protocol(reader, writer, config)
-        elif protocol_type == "vmess":
-            return await _check_vmess_protocol(reader, writer, config)
-        elif protocol_type == "vless":
-            return await _check_vless_protocol(reader, writer, config)
-        elif protocol_type == "shadowsocks":
-            return await _check_shadowsocks_protocol(reader, writer, config)
-        else:
-            # Неизвестный протокол - возвращаем True (базовая TCP проверка уже прошла)
-            return True
-    except Exception:
-        return False
-
-
-async def _check_server_async(
-    host: str, port: int, protocol_type: Optional[str], config: dict, semaphore: asyncio.Semaphore
-) -> bool:
-    """Проверяет доступность VPN сервера с проверкой протокола."""
-    async with semaphore:
-        for attempt in range(MAX_RETRIES + 1):
             try:
-                # Попытка установить TCP соединение
-                conn = asyncio.open_connection(host, port)
-                reader, writer = await asyncio.wait_for(conn, timeout=CHECK_TIMEOUT)
-                
-                # Если известен тип протокола, проверяем его
-                if protocol_type:
-                    try:
-                        protocol_ok = await asyncio.wait_for(
-                            _check_protocol(protocol_type, reader, writer, config),
-                            timeout=2.0
-                        )
-                        writer.close()
-                        with contextlib.suppress(Exception):
-                            await writer.wait_closed()
-                        if protocol_ok:
-                            return True
-                        # Протокол не прошел проверку, но TCP работает - делаем повторную попытку
-                        if attempt < MAX_RETRIES:
-                            await asyncio.sleep(RETRY_DELAY)
-                            continue
-                        return False
-                    except asyncio.TimeoutError:
-                        # Таймаут проверки протокола
-                        writer.close()
-                        with contextlib.suppress(Exception):
-                            await writer.wait_closed()
-                        if attempt < MAX_RETRIES:
-                            await asyncio.sleep(RETRY_DELAY)
-                            continue
-                        return False
-                
-                # Если тип протокола неизвестен, делаем базовую проверку TCP
+                response = await asyncio.wait_for(reader.read(1), timeout=1.0)
+                return len(response) > 0
+            except asyncio.TimeoutError:
+                return True
+        except Exception:
+            return False
+
+
+class VLessProtocolChecker:
+    """Проверка VLESS протокола."""
+
+    async def __call__(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, config: Dict
+    ) -> bool:
+        try:
+            version = b"\x00"
+            writer.write(version)
+            await asyncio.wait_for(writer.drain(), timeout=1.0)
+
+            try:
+                response = await asyncio.wait_for(reader.read(1), timeout=1.0)
+                return len(response) > 0
+            except asyncio.TimeoutError:
+                return True
+        except Exception:
+            return False
+
+
+class ShadowsocksProtocolChecker:
+    """Проверка Shadowsocks протокола."""
+
+    async def __call__(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, config: Dict
+    ) -> bool:
+        try:
+            test_data = b"\x00" * 16
+            writer.write(test_data)
+            await asyncio.wait_for(writer.drain(), timeout=1.0)
+            return True
+        except Exception:
+            return False
+
+
+class ProtocolCheckerFactory:
+    """Фабрика для создания проверщиков протоколов."""
+
+    _checkers: Dict[ProtocolType, ProtocolChecker] = {
+        ProtocolType.TROJAN: TrojanProtocolChecker(),
+        ProtocolType.VMESS: VMessProtocolChecker(),
+        ProtocolType.VLESS: VLessProtocolChecker(),
+        ProtocolType.SHADOWSOCKS: ShadowsocksProtocolChecker(),
+    }
+
+    @classmethod
+    def get_checker(cls, protocol_type: ProtocolType) -> Optional[ProtocolChecker]:
+        """Возвращает проверщик для указанного протокола."""
+        return cls._checkers.get(protocol_type)
+
+
+class ServerChecker:
+    """Класс для проверки доступности VPN серверов."""
+
+    def __init__(self, config: AppConfig):
+        self.config = config
+        self.semaphore = asyncio.Semaphore(max(1, config.max_concurrency))
+
+    async def check_server(self, server_config: ServerConfig) -> bool:
+        """Проверяет доступность сервера."""
+        async with self.semaphore:
+            for attempt in range(self.config.max_retries + 1):
                 try:
-                    writer.write(b"\x00")
-                    await asyncio.wait_for(writer.drain(), timeout=0.5)
-                except (asyncio.TimeoutError, OSError):
-                    writer.close()
-                    with contextlib.suppress(Exception):
-                        await writer.wait_closed()
-                    if attempt < MAX_RETRIES:
-                        await asyncio.sleep(RETRY_DELAY)
-                        continue
+                    if await self._check_connection(server_config):
+                        return True
+                    if attempt < self.config.max_retries:
+                        await asyncio.sleep(self.config.retry_delay)
+                except (ConnectionRefusedError, OSError):
                     return False
-                
+                except Exception as e:
+                    logger.debug(f"Error checking server {server_config.cache_key}: {e}")
+                    if attempt < self.config.max_retries:
+                        await asyncio.sleep(self.config.retry_delay)
+            return False
+
+    async def _check_connection(self, server_config: ServerConfig) -> bool:
+        """Проверяет соединение с сервером."""
+        try:
+            conn = asyncio.open_connection(server_config.host, server_config.port)
+            reader, writer = await asyncio.wait_for(conn, timeout=self.config.check_timeout)
+
+            try:
+                if await self._check_protocol(server_config, reader, writer):
+                    return True
+            finally:
                 writer.close()
                 with contextlib.suppress(Exception):
                     await writer.wait_closed()
-                return True
-                
-            except asyncio.TimeoutError:
-                # Для timeout делаем повторную попытку
-                if attempt < MAX_RETRIES:
-                    await asyncio.sleep(RETRY_DELAY)
-                    continue
-                return False
-                
-            except (ConnectionRefusedError, OSError):
-                # Connection refused - сервер точно не работает, не делаем повторные попытки
-                return False
-                
-            except Exception:
-                # Для других ошибок делаем повторную попытку
-                if attempt < MAX_RETRIES:
-                    await asyncio.sleep(RETRY_DELAY)
-                    continue
-                return False
-        
+        except asyncio.TimeoutError:
+            return False
         return False
 
+    async def _check_protocol(
+        self, server_config: ServerConfig, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ) -> bool:
+        """Проверяет протокол сервера."""
+        checker = ProtocolCheckerFactory.get_checker(server_config.protocol_type)
+        if checker:
+            try:
+                return await asyncio.wait_for(
+                    checker(reader, writer, server_config.config), timeout=2.0
+                )
+            except asyncio.TimeoutError:
+                return False
 
-async def run_checks(entries):
-    if not entries:
-        return []
-
-    semaphore = asyncio.Semaphore(max(1, min(MAX_CONCURRENCY, len(entries))))
-
-    async def runner(entry):
+        # Базовая TCP проверка для неизвестных протоколов
         try:
-            status = await _check_server_async(
-                entry["host"],
-                entry["port"],
-                entry.get("protocol_type"),
-                entry.get("config", {}),
-                semaphore
-            )
-        except Exception:
-            status = False
-        return entry, status
-
-    tasks = [asyncio.create_task(runner(entry)) for entry in entries]
-    results = []
-    for task in asyncio.as_completed(tasks):
-        results.append(await task)
-    return results
+            writer.write(b"\x00")
+            await asyncio.wait_for(writer.drain(), timeout=0.5)
+            return True
+        except (asyncio.TimeoutError, OSError):
+            return False
 
 
-def filter_config_lines(text: str, session_cache: Dict[str, bool]) -> str:
-    """
-    Фильтрует конфигурационные строки, проверяя доступность серверов.
-    session_cache - простой dict для хранения результатов проверки в рамках одного запуска.
-    """
-    lines = [raw.rstrip("\n") for raw in text.splitlines()]
-    kept_lines: list[Optional[str]] = [None] * len(lines)
-    to_check = []
+class ConfigFilter:
+    """Класс для фильтрации конфигураций."""
 
-    for idx, line in enumerate(lines):
-        parsed = extract_host_port(line)
-        if parsed is None:
-            # Не VPN конфиг - оставляем как есть
-            kept_lines[idx] = line
-            continue
+    def __init__(self, config: AppConfig, parser_registry: ConfigParserRegistry, server_checker: ServerChecker):
+        self.config = config
+        self.parser_registry = parser_registry
+        self.server_checker = server_checker
+        self.session_cache: Dict[str, bool] = {}
 
-        host, port, protocol_type, config = parsed
-        key = cache_key(host, port)
-        
-        # Проверяем, был ли этот сервер уже проверен в этом запуске
-        if key in session_cache:
-            if session_cache[key]:
+    async def filter_lines(self, lines: List[str]) -> Tuple[List[str], List[str]]:
+        """
+        Фильтрует строки конфигурации.
+
+        Returns:
+            Tuple[List[str], List[str]]: (отфильтрованные строки, строки для TM.txt)
+        """
+        kept_lines: List[Optional[str]] = [None] * len(lines)
+        tm_lines: List[str] = []
+        to_check: List[Tuple[int, ServerConfig]] = []
+
+        for idx, line in enumerate(lines):
+            server_config = self.parser_registry.parse(line)
+            if server_config is None:
                 kept_lines[idx] = line
-            # Если False - просто пропускаем (не добавляем в список)
-            continue
+                continue
 
-        # Сервер еще не проверялся - добавляем в очередь проверки
-        to_check.append(
-            {
-                "idx": idx,
-                "line": line,
-                "host": host,
-                "port": port,
-                "protocol_type": protocol_type,
-                "config": config,
-                "key": key,
-            }
-        )
+            # Проверяем кэш
+            if server_config.cache_key in self.session_cache:
+                if self.session_cache[server_config.cache_key]:
+                    kept_lines[idx] = line
+                    if self._should_add_to_tm(line):
+                        tm_lines.append(line)
+                continue
 
-    # Проверяем все серверы, которые еще не были проверены
-    if to_check:
-        loop_results = asyncio.run(run_checks(to_check))
+            to_check.append((idx, server_config))
 
-        for entry, alive in loop_results:
-            # Сохраняем результат в кэш сессии
-            session_cache[entry["key"]] = alive
-            if alive:
-                kept_lines[entry["idx"]] = entry["line"]
+        # Проверяем серверы параллельно
+        if to_check:
+            tasks = [
+                self._check_and_update(idx, server_config, kept_lines, tm_lines)
+                for idx, server_config in to_check
+            ]
+            await asyncio.gather(*tasks)
 
-    filtered = [line for line in kept_lines if line is not None]
-    return "\n".join(filtered) + ("\n" if filtered else "")
+        filtered = [line for line in kept_lines if line is not None]
+        return filtered, tm_lines
+
+    async def _check_and_update(
+        self, idx: int, server_config: ServerConfig, kept_lines: List[Optional[str]], tm_lines: List[str]
+    ):
+        """Проверяет сервер и обновляет результаты."""
+        is_alive = await self.server_checker.check_server(server_config)
+        self.session_cache[server_config.cache_key] = is_alive
+
+        if is_alive:
+            kept_lines[idx] = server_config.original_line
+            if self._should_add_to_tm(server_config.original_line):
+                tm_lines.append(server_config.original_line)
+
+    def _should_add_to_tm(self, line: str) -> bool:
+        """Проверяет, нужно ли добавить строку в TM.txt."""
+        return any(line.startswith(prefix) for prefix in self.config.tm_filter_prefixes)
 
 
-def ensure_output_dir() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+class ConfigDownloader:
+    """Класс для скачивания конфигураций."""
+
+    def __init__(self, config: AppConfig):
+        self.config = config
+
+    def download(self, url: str) -> str:
+        """Скачивает конфигурацию по URL."""
+        try:
+            response = requests.get(url, timeout=self.config.download_timeout)
+            response.raise_for_status()
+            return response.text
+        except requests.RequestException as e:
+            logger.error(f"Failed to download {url}: {e}")
+            raise
+
+
+class ConfigProcessor:
+    """Основной класс для обработки конфигураций."""
+
+    def __init__(self, config: AppConfig):
+        self.config = config
+        self.parser_registry = ConfigParserRegistry()
+        self.server_checker = ServerChecker(config)
+        self.downloader = ConfigDownloader(config)
+        self.filter = ConfigFilter(config, self.parser_registry, self.server_checker)
+
+    async def process_all(self) -> None:
+        """Обрабатывает все конфигурации."""
+        self.config.output_dir.mkdir(parents=True, exist_ok=True)
+        tm_lines: List[str] = []
+
+        for filename, url in self.config.config_urls.items():
+            try:
+                original_text = self.downloader.download(url)
+                lines = [line.rstrip("\n") for line in original_text.splitlines()]
+
+                filtered_lines, file_tm_lines = await self.filter.filter_lines(lines)
+
+                # Собираем записи для TM.txt только из указанного файла
+                if filename == self.config.tm_source_file:
+                    tm_lines.extend(file_tm_lines)
+
+                output_path = self.config.output_dir / filename
+                output_text = "\n".join(filtered_lines) + ("\n" if filtered_lines else "")
+                output_path.write_text(output_text, encoding="utf-8")
+                logger.info(f"Updated {output_path} ({len(filtered_lines)} lines)")
+
+            except requests.RequestException:
+                logger.warning(f"Skipping {filename} due to download error")
+                continue
+
+        # Создаем TM.txt
+        self._create_tm_file(tm_lines)
+
+    def _create_tm_file(self, tm_lines: List[str]) -> None:
+        """Создает файл TM.txt."""
+        if tm_lines:
+            tm_path = self.config.output_dir / "TM.txt"
+            tm_content = "\n".join(tm_lines) + "\n"
+            tm_path.write_text(tm_content, encoding="utf-8")
+            logger.info(f"Created {tm_path} ({len(tm_lines)} lines)")
+        else:
+            logger.info("No entries for TM.txt")
+
+
+async def main_async() -> None:
+    """Асинхронная основная функция."""
+    config = AppConfig()
+    processor = ConfigProcessor(config)
+    await processor.process_all()
 
 
 def main() -> None:
-    ensure_output_dir()
-    # Простой in-memory кэш для хранения результатов проверки в рамках одного запуска
-    # Ключ: "host:port", значение: bool (True = сервер работает, False = не работает)
-    session_cache: Dict[str, bool] = {}
-
-    for filename, url in CONFIG_URLS.items():
-        try:
-            original_text = fetch_text(url)
-        except Exception as e:
-            # If download fails, skip this file to avoid wiping existing data
-            print(f"Failed to download {url}: {e}")
-            continue
-
-        filtered_text = filter_config_lines(original_text, session_cache)
-
-        output_path = OUTPUT_DIR / filename
-        output_path.write_text(filtered_text, encoding="utf-8")
-        print(f"Updated {output_path}")
+    """Точка входа в приложение."""
+    asyncio.run(main_async())
 
 
 if __name__ == "__main__":
     main()
-
-
