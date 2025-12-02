@@ -99,7 +99,6 @@ vless://d82baa81-c138-49fc-b81e-7ef0eb7ff063@us1.candyfans.win:443?encryption=no
 trojan://eDHWaPzxcl@145.223.70.115:25365?security=reality&pbk=YaP997bVbPWOkNwZ-aKWVNHSdzQkZLzhTGjVRVC1u3I&fp=chrome&type=grpc&sni=cloudflare.com&sid=d9#🇫🇷[openproxylist.com] trojan-FR
 vless://9c79aceb-4649-44ea-9698-b5e9ecf6d6da@156.224.78.8:10001?security=reality&amp;encryption=none&amp;pbk=D_kMOsg1KCtT0tudPFVDXGuEcSqZGtUYqBB-BiIxmls&amp;headerType=none&amp;fp=chrome&amp;type=tcp&amp;flow=xtls-rprx-vision&amp;sni=www.icloud.com&amp;sid=f7223dab#🇭🇰[openproxylist.com] vless-HK
 vless://4a6de183-2ad3-456c-b420-feeac81f6257@51.250.28.39:443?mode=gun&security=reality&encryption=none&pbk=FCg2XiFJrpH-2XlELSSSyEC7zkeW29HOgp4rfrqXEAI&fp=chrome&type=grpc&serviceName=xyz&sni=cloudflare.com&sid=123abc#🇷🇺[openproxylist.com] vless-RU
-vless://2ee2a715-d541-416a-8713-d66567448c2e@91.98.38.116:443?mode=gun&security=none&encryption=none&type=grpc#🇩🇪[openproxylist.com] vless-DE
 vless://e64c5bbb-a4b8-498e-b374-4462d961c8a2@38.60.196.27:443?encryption=none&amp;security=reality&amp;flow=xtls-rprx-vision&amp;type=tcp&amp;sni=www.cloudflare.com&amp;pbk=j_b7jaRqL2-82XSGRL0IYkNJ2Y3hrhhgq5kIBIK76lk&amp;fp=chrome#🇬🇧[openproxylist.com] vless-GB
 vless://f61a4285-7264-4d07-9408-7b9ba1922c26@167.179.27.92:443?encryption=none&security=tls&sni=gaosir.unfeeling.sbs&type=ws&host=gaosir.unfeeling.sbs&path=telegram%F0%9F%87%A8%F0%9F%87%B3%40wangcai2%2F%3Fed%3D2560#🇨🇦[openproxylist.com] vless-CA
 trojan://FDIypSwe64a3DA7un2R8DFjYXZO3NS05gKZTTOC8SxO0Fy3cqYg3EaFDA3ABaEYKNx39D@kuame.missionsec.us:443?security=tls&sni=kuame.missionsec.us#🇯🇵[openproxylist.com] trojan-JP
@@ -113,6 +112,7 @@ vless://9b0c1d6e-7f6e-4b06-96ba-b8a397a69166@usa29.unlockmatrix.org:443?security
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpIV05zS3k2MXFQeW9EdHJFWUV0WnVr@5.129.214.186:6403#🇳🇱[openproxylist.com] ss-NL
 vless://be72cd92-92d2-4543-9bef-1673fcd03b45@fr.nextseesion.ir:35789?security=none&encryption=none&headerType=none&type=tcp#🇫🇷[openproxylist.com] vless-FR
 vless://f61a4285-7264-4d07-9408-7b9ba1922c26@167.179.27.92:443?encryption=none&security=tls&sni=gaosir.unfeeling.sbs&type=ws&host=gaosir.unfeeling.sbs&path=telegram%F0%9F%87%A8%F0%9F%87%B3%40wangcai2%2F%3Fed%3D2560#🇨🇦[openproxylist.com] vless-CA
+vless://8062ddd7-fdee-485d-8948-c6e5df168fe9@173.212.209.56:443?encryption=none&amp;security=reality&amp;flow=xtls-rprx-vision&amp;type=tcp&amp;sni=aws.amazon.com&amp;pbk=ks1Ud3HgMftMPFrUpu7dJboFGyFXB74d4EaXaO4283Q&amp;fp=chrome#🇫🇷[openproxylist.com] vless-FR
 vless://be32c9ad-92e1-485b-dc74-2a65e9dae480@86.107.168.100:7070?security=tls&alpn=h2,http/1.1&encryption=none&headerType=none&fp=chrome&type=tcp&sni=src.smnsoft.com#🇨🇦[openproxylist.com] vless-CA
 vless://4c8659ab-e49f-4db6-9a87-d0247e98f5ec@m61a.vip784.com:33801?security=none&amp;type=tcp&amp;headerType=http&amp;path=%2F&amp;host=varzesh3.ir#🇫🇮[openproxylist.com] vless-FI
 vless://f61a4285-7264-4d07-9408-7b9ba1922c26@167.179.27.92:443?encryption=none&security=tls&sni=gaosir.unfeeling.sbs&type=ws&host=gaosir.unfeeling.sbs&path=telegram%F0%9F%87%A8%F0%9F%87%B3%40wangcai2%2F%3Fed%3D2560#🇨🇦[openproxylist.com] vless-CA
@@ -143,4 +143,5 @@ ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpBUmd2R1p5d0ErZ2FjZ0dWMjZCdm11MDUrd1ptUlcvait
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpBUmd2R1p5d0ErZ2FjZ0dWMjZCdm11MDUrd1ptUlcvaitBZFUrWjhCdDQ0PQ@185.113.143.186:990#🇵🇹[openproxylist.com] ss-PT
 ss://YWVzLTI1Ni1nY206UmV4bkJnVTdFVjVBRHhH@141.164.45.187:7001#🇰🇷[openproxylist.com] ss-KR
 vless://a00d89f6-ab7e-4e30-a5e5-54c701d62c93@178.236.16.98:35728?security=reality&amp;encryption=none&amp;pbk=vhUFNoFcvtZAVMo8y5K5eU2V43m5q6yjmWIhp5RkFng&amp;headerType=none&amp;fp=chrome&amp;type=tcp&amp;sni=yahoo.com&amp;sid=69a2#🇰🇿[openproxylist.com] vless-KZ
+vless://78fc9ba9-9c68-4b49-891f-ea9e38bd3b56@20.235.105.146:443?&security=tls&fp=random&sni=ak.suoni.nyc.mn&type=ws&headerType=none&host=ak.suoni.nyc.mn&path=%2Fproxyip%3Dsjc.o00o.ooo#🇮🇳[openproxylist.com] vless-IN
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpnWE9YazJGSndzejlQNm5YSUlDdUROT3FGOWdXWDFkbg==@185.156.110.92:443#🇭🇷[openproxylist.com] ss-HR
