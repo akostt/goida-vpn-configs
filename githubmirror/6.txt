@@ -125,7 +125,6 @@ vless://f61a4285-7264-4d07-9408-7b9ba1922c26@160.16.203.210:443?path=%2F%E8%8A%8
 trojan://Qzy7tgpRhu@37.18.14.33:443?allowInsecure=1&sni=m.vk.com#🇷🇺[openproxylist.com] trojan-RU
 vless://f61a4285-7264-4d07-9408-7b9ba1922c26@160.16.203.210:443?path=%2F%E8%8A%82%E7%82%B9%E7%8B%82%E9%AD%94%2F%3Fed%3D2560&amp;security=tls&amp;encryption=none&amp;host=gaosir.unfeeling.sbs&amp;fp=chrome&amp;type=ws&amp;sni=gaosir.unfeeling.sbs#🇨🇦[openproxylist.com] vless-CA
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpZekg0aWQ3WkV5S3BmeTM5RjJZY09tekNzQmtsR3doOA@95.174.68.33:443#🇦🇪[openproxylist.com] ss-AE
-vless://2ee2a715-d541-416a-8713-d66567448c2e@91.98.168.173:443?mode=gun&security=none&encryption=none&authority=/?BIA_TELEGRAM:TM (@Azarbayjab1)_TM(@Azarbayjab1)_TM (@AZARBAYJAB1)_TM (@AZARBAYJAB1)&type=grpc#🇩🇪[openproxylist.com] vless-DE
 vless://f61a4285-7264-4d07-9408-7b9ba1922c26@160.16.203.210:443?path=%2F%E8%8A%82%E7%82%B9%E7%8B%82%E9%AD%94%2F%3Fed%3D2560&security=tls&encryption=none&host=gaosir.unfeeling.sbs&fp=chrome&type=ws&sni=gaosir.unfeeling.sbs#🇨🇦[openproxylist.com] vless-CA
 trojan://.ie4rghJuMkcf0oF@38.96.254.102:18509?security=tls&headerType=none&type=tcp&sni=shoppingmall.electricbanana.click#🇨🇦[openproxylist.com] trojan-CA
 vless://44830663-914e-4127-a9b3-412406f59cbe@185.193.17.80:2066?security=reality&encryption=none&pbk=-Z0BnqW2MHBXjDsB2a8-KPfg8GqTO1uIPXriHQAMhSY&headerType=none&fp=chrome&type=tcp&sni=yahoo.com&sid=6b245ab1#🇫🇷[openproxylist.com] vless-FR
