@@ -1,5 +1,4 @@
 vless://b964cfbe-5f8a-47ae-9f14-4a6e36bfed2b@154.31.113.124:443?security=reality&amp;encryption=none&amp;pbk=vNWTKraW-w1e5fUKLJhjDpslQX7OFnRbavF2VHowNhk&amp;headerType=none&amp;fp=chrome&amp;type=tcp&amp;flow=xtls-rprx-vision&amp;sni=tesla.com&amp;sid=cb37b04594#🏳[openproxylist.com] vless-
-ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpnNVJRb3hRdVZ0bkZ2M1h4c2E4ZWRQaXNYTlBueVdLeQ@45.83.20.206:443#🏳[openproxylist.com] ss-
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@144.217.164.29:12000#🏳[openproxylist.com] ss-
 vless://fd0718a1-c463-4297-8ba9-a7f4b93ce436@147.45.234.51:443?security=reality&amp;encryption=none&amp;pbk=GjFTD96cethyxcRuToHUwv741QoDB9-V7LRsxEh6jTU&amp;headerType=none&amp;fp=chrome&amp;type=tcp&amp;flow=xtls-rprx-vision&amp;sni=www.vk.com&amp;sid=ab1cd2#🏳[openproxylist.com] vless-
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@144.217.164.29:12000#🏳[openproxylist.com] ss-
