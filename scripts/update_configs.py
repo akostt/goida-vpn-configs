@@ -517,14 +517,6 @@ class ConfigFilter:
         if not ip_matches:
             return False
         
-        # Проверка SNI (может быть в разных полях в зависимости от протокола)
-        # Если SNI указан, он должен соответствовать разрешённым
-        sni = config.get("sni") or config.get("host") or config.get("serverName")
-        if sni:
-            sni_matches = any(allowed_sni in sni for allowed_sni in self.config.tm2_allowed_sni)
-            if not sni_matches:
-                return False
-        
         # Проверка типа трафика (flow)
         # Если flow указан, он должен соответствовать разрешённым типам
         flow = config.get("flow") or config.get("type")
