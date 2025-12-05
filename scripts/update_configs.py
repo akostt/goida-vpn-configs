@@ -513,17 +513,6 @@ class ConfigFilter:
         if not ip_matches:
             return False
         
-        # Проверка типа трафика (flow)
-        # Если flow указан, он должен соответствовать разрешённым типам
-        flow = config.get("flow") or config.get("type")
-        if flow:
-            flow_lower = flow.lower()
-            flow_matches = any(
-                allowed_flow in flow_lower for allowed_flow in self.config.tm2_allowed_flow_types
-            )
-            if not flow_matches:
-                return False
-        
         # Все обязательные критерии выполнены
         return True
 
