@@ -68,7 +68,7 @@ class AppConfig:
             "🇷🇺 Aeza Group LLC — #",
             "🇫🇮 Finland — #",
             "Т-Мобайл",
-            "Wien Austria ❗Обход глушилок"
+            "***CIDR+SNI"
         ]
     )
 
