@@ -10,6 +10,7 @@ import contextlib
 import json
 import logging
 import os
+import re
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -73,6 +74,36 @@ class AppConfig:
     )
 
     tm_source_file: str = "26.txt"
+
+    # Критерии для TM2 фильтрации
+    tm2_allowed_sni: List[str] = field(
+        default_factory=lambda: [
+            "api-maps.yandex.ru",
+            "yandexcdn.yandexdns.ru",
+            "music.yandex.ru",
+            "sun6-21.userapi.com",
+            "sun6-22.userapi.com",
+            "eh.vk.com",
+        ]
+    )
+
+    tm2_allowed_ip_patterns: List[str] = field(
+        default_factory=lambda: [
+            r"51\.250\.",
+            r"84\.201\.",
+            r"188\.72\.",
+            r"151\.236\.93\.",
+            r"46\.243\.",
+        ]
+    )
+
+    tm2_allowed_ports: List[int] = field(
+        default_factory=lambda: [443, 8443, 9443, 4248, 7443]
+    )
+
+    tm2_allowed_flow_types: List[str] = field(
+        default_factory=lambda: ["xtls-rprx-vision", "tls", "xhttp"]
+    )
 
     def __post_init__(self):
         object.__setattr__(self, "output_dir", self.base_dir / "githubmirror")
@@ -387,15 +418,16 @@ class ConfigFilter:
         self.server_checker = server_checker
         self.session_cache: Dict[str, bool] = {}
 
-    async def filter_lines(self, lines: List[str]) -> Tuple[List[str], List[str]]:
+    async def filter_lines(self, lines: List[str]) -> Tuple[List[str], List[str], List[str]]:
         """
         Фильтрует строки конфигурации.
 
         Returns:
-            Tuple[List[str], List[str]]: (отфильтрованные строки, строки для TM.txt)
+            Tuple[List[str], List[str], List[str]]: (отфильтрованные строки, строки для TM.txt, строки для TM2.txt)
         """
         kept_lines: List[Optional[str]] = [None] * len(lines)
         tm_lines: List[str] = []
+        tm2_lines: List[str] = []
         to_check: List[Tuple[int, ServerConfig]] = []
 
         for idx, line in enumerate(lines):
@@ -410,6 +442,8 @@ class ConfigFilter:
                     kept_lines[idx] = line
                     if self._should_add_to_tm(line):
                         tm_lines.append(line)
+                    if self._should_add_to_tm2(server_config):
+                        tm2_lines.append(line)
                 continue
 
             to_check.append((idx, server_config))
@@ -417,16 +451,21 @@ class ConfigFilter:
         # Проверяем серверы параллельно
         if to_check:
             tasks = [
-                self._check_and_update(idx, server_config, kept_lines, tm_lines)
+                self._check_and_update(idx, server_config, kept_lines, tm_lines, tm2_lines)
                 for idx, server_config in to_check
             ]
             await asyncio.gather(*tasks)
 
         filtered = [line for line in kept_lines if line is not None]
-        return filtered, tm_lines
+        return filtered, tm_lines, tm2_lines
 
     async def _check_and_update(
-        self, idx: int, server_config: ServerConfig, kept_lines: List[Optional[str]], tm_lines: List[str]
+        self,
+        idx: int,
+        server_config: ServerConfig,
+        kept_lines: List[Optional[str]],
+        tm_lines: List[str],
+        tm2_lines: List[str],
     ):
         """Проверяет сервер и обновляет результаты."""
         is_alive = await self.server_checker.check_server(server_config)
@@ -436,6 +475,8 @@ class ConfigFilter:
             kept_lines[idx] = server_config.original_line
             if self._should_add_to_tm(server_config.original_line):
                 tm_lines.append(server_config.original_line)
+            if self._should_add_to_tm2(server_config):
+                tm2_lines.append(server_config.original_line)
 
     def _should_add_to_tm(self, line: str) -> bool:
         """Проверяет, нужно ли добавить строку в TM.txt.
@@ -453,6 +494,50 @@ class ConfigFilter:
         except Exception:
             # Если декодирование не удалось, возвращаем результат проверки оригинальной строки
             return False
+
+    def _should_add_to_tm2(self, server_config: ServerConfig) -> bool:
+        """Проверяет, соответствует ли сервер критериям для TM2.txt.
+        
+        Критерии:
+        1. SNI входит в список разрешённых
+        2. IP-адрес входит в доверенный пул
+        3. Порт входит в разрешённые порты
+        4. Тип трафика соответствует разрешённым типам
+        """
+        config = server_config.config
+        
+        # Проверка порта
+        if server_config.port not in self.config.tm2_allowed_ports:
+            return False
+        
+        # Проверка IP-адреса (host) - проверяем начало IP адреса
+        ip_matches = any(
+            re.search(pattern, server_config.host) for pattern in self.config.tm2_allowed_ip_patterns
+        )
+        if not ip_matches:
+            return False
+        
+        # Проверка SNI (может быть в разных полях в зависимости от протокола)
+        # Если SNI указан, он должен соответствовать разрешённым
+        sni = config.get("sni") or config.get("host") or config.get("serverName")
+        if sni:
+            sni_matches = any(allowed_sni in sni for allowed_sni in self.config.tm2_allowed_sni)
+            if not sni_matches:
+                return False
+        
+        # Проверка типа трафика (flow)
+        # Если flow указан, он должен соответствовать разрешённым типам
+        flow = config.get("flow") or config.get("type")
+        if flow:
+            flow_lower = flow.lower()
+            flow_matches = any(
+                allowed_flow in flow_lower for allowed_flow in self.config.tm2_allowed_flow_types
+            )
+            if not flow_matches:
+                return False
+        
+        # Все обязательные критерии выполнены
+        return True
 
 
 class ConfigDownloader:
@@ -486,17 +571,19 @@ class ConfigProcessor:
         """Обрабатывает все конфигурации."""
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
         tm_lines: List[str] = []
+        tm2_lines: List[str] = []
 
         for filename, url in self.config.config_urls.items():
             try:
                 original_text = self.downloader.download(url)
                 lines = [line.rstrip("\n") for line in original_text.splitlines()]
 
-                filtered_lines, file_tm_lines = await self.filter.filter_lines(lines)
+                filtered_lines, file_tm_lines, file_tm2_lines = await self.filter.filter_lines(lines)
 
-                # Собираем записи для TM.txt только из указанного файла
+                # Собираем записи для TM.txt и TM2.txt только из указанного файла
                 if filename == self.config.tm_source_file:
                     tm_lines.extend(file_tm_lines)
+                    tm2_lines.extend(file_tm2_lines)
 
                 output_path = self.config.output_dir / filename
                 output_text = "\n".join(filtered_lines) + ("\n" if filtered_lines else "")
@@ -507,8 +594,9 @@ class ConfigProcessor:
                 logger.warning(f"Skipping {filename} due to download error")
                 continue
 
-        # Создаем TM.txt
+        # Создаем TM.txt и TM2.txt
         self._create_tm_file(tm_lines)
+        self._create_tm2_file(tm2_lines)
 
     def _create_tm_file(self, tm_lines: List[str]) -> None:
         """Создает файл TM.txt."""
@@ -519,6 +607,16 @@ class ConfigProcessor:
             logger.info(f"Created {tm_path} ({len(tm_lines)} lines)")
         else:
             logger.info("No entries for TM.txt")
+
+    def _create_tm2_file(self, tm2_lines: List[str]) -> None:
+        """Создает файл TM2.txt."""
+        if tm2_lines:
+            tm2_path = self.config.output_dir / "TM2.txt"
+            tm2_content = "\n".join(tm2_lines) + "\n"
+            tm2_path.write_text(tm2_content, encoding="utf-8")
+            logger.info(f"Created {tm2_path} ({len(tm2_lines)} lines)")
+        else:
+            logger.info("No entries for TM2.txt")
 
 
 async def main_async() -> None:
