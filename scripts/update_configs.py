@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Protocol, Tuple
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
@@ -62,32 +62,10 @@ class AppConfig:
         }
     )
 
-    tm_filter_prefixes: List[str] = field(
-        default_factory=lambda: [
-            "🇷🇺 Yandex — #",
-            "[🇷🇺] [vl-re-gr] [",
-            "🇷🇺 Aeza Group LLC — #",
-            "🇫🇮 Finland — #",
-            "Т-Мобайл",
-            "***CIDR+SNI"
-        ]
-    )
-
     tm_source_file: str = "26.txt"
 
-    # Критерии для TM2 фильтрации
-    tm2_allowed_sni: List[str] = field(
-        default_factory=lambda: [
-            "api-maps.yandex.ru",
-            "yandexcdn.yandexdns.ru",
-            "music.yandex.ru",
-            "sun6-21.userapi.com",
-            "sun6-22.userapi.com",
-            "eh.vk.com",
-        ]
-    )
-
-    tm2_allowed_ip_patterns: List[str] = field(
+    # IP-диапазоны для фильтрации TM.txt
+    tm_allowed_ip_patterns: List[str] = field(
         default_factory=lambda: [
             r"51\.250\.",
             r"84\.201\.",
@@ -95,14 +73,6 @@ class AppConfig:
             r"151\.236\.93\.",
             r"46\.243\.",
         ]
-    )
-
-    tm2_allowed_ports: List[int] = field(
-        default_factory=lambda: [443, 8443, 9443, 4248, 7443]
-    )
-
-    tm2_allowed_flow_types: List[str] = field(
-        default_factory=lambda: ["xtls-rprx-vision", "tls", "xhttp"]
     )
 
     def __post_init__(self):
@@ -418,16 +388,15 @@ class ConfigFilter:
         self.server_checker = server_checker
         self.session_cache: Dict[str, bool] = {}
 
-    async def filter_lines(self, lines: List[str]) -> Tuple[List[str], List[str], List[str]]:
+    async def filter_lines(self, lines: List[str]) -> Tuple[List[str], List[str]]:
         """
         Фильтрует строки конфигурации.
 
         Returns:
-            Tuple[List[str], List[str], List[str]]: (отфильтрованные строки, строки для TM.txt, строки для TM2.txt)
+            Tuple[List[str], List[str]]: (отфильтрованные строки, строки для TM.txt)
         """
         kept_lines: List[Optional[str]] = [None] * len(lines)
         tm_lines: List[str] = []
-        tm2_lines: List[str] = []
         to_check: List[Tuple[int, ServerConfig]] = []
 
         for idx, line in enumerate(lines):
@@ -440,10 +409,8 @@ class ConfigFilter:
             if server_config.cache_key in self.session_cache:
                 if self.session_cache[server_config.cache_key]:
                     kept_lines[idx] = line
-                    if self._should_add_to_tm(line):
+                    if self._should_add_to_tm(server_config):
                         tm_lines.append(line)
-                    if self._should_add_to_tm2(server_config):
-                        tm2_lines.append(line)
                 continue
 
             to_check.append((idx, server_config))
@@ -451,13 +418,13 @@ class ConfigFilter:
         # Проверяем серверы параллельно
         if to_check:
             tasks = [
-                self._check_and_update(idx, server_config, kept_lines, tm_lines, tm2_lines)
+                self._check_and_update(idx, server_config, kept_lines, tm_lines)
                 for idx, server_config in to_check
             ]
             await asyncio.gather(*tasks)
 
         filtered = [line for line in kept_lines if line is not None]
-        return filtered, tm_lines, tm2_lines
+        return filtered, tm_lines
 
     async def _check_and_update(
         self,
@@ -465,7 +432,6 @@ class ConfigFilter:
         server_config: ServerConfig,
         kept_lines: List[Optional[str]],
         tm_lines: List[str],
-        tm2_lines: List[str],
     ):
         """Проверяет сервер и обновляет результаты."""
         is_alive = await self.server_checker.check_server(server_config)
@@ -473,48 +439,18 @@ class ConfigFilter:
 
         if is_alive:
             kept_lines[idx] = server_config.original_line
-            if self._should_add_to_tm(server_config.original_line):
+            if self._should_add_to_tm(server_config):
                 tm_lines.append(server_config.original_line)
-            if self._should_add_to_tm2(server_config):
-                tm2_lines.append(server_config.original_line)
 
-    def _should_add_to_tm(self, line: str) -> bool:
-        """Проверяет, нужно ли добавить строку в TM.txt.
+    def _should_add_to_tm(self, server_config: ServerConfig) -> bool:
+        """Проверяет, соответствует ли сервер критериям для TM.txt.
         
-        Учитывает как обычные строки, так и URL-encoded версии.
+        Критерий: IP-адрес входит в доверенный пул.
         """
-        # Проверяем оригинальную строку
-        if any(prefix in line for prefix in self.config.tm_filter_prefixes):
-            return True
-        
-        # Декодируем URL-encoded строку и проверяем снова
-        try:
-            decoded_line = unquote(line, encoding='utf-8')
-            return any(prefix in decoded_line for prefix in self.config.tm_filter_prefixes)
-        except Exception:
-            # Если декодирование не удалось, возвращаем результат проверки оригинальной строки
-            return False
-
-    def _should_add_to_tm2(self, server_config: ServerConfig) -> bool:
-        """Проверяет, соответствует ли сервер критериям для TM2.txt.
-        
-        Критерии:
-        1. SNI входит в список разрешённых
-        2. IP-адрес входит в доверенный пул
-        3. Порт входит в разрешённые порты
-        4. Тип трафика соответствует разрешённым типам
-        """
-        config = server_config.config
-        
         # Проверка IP-адреса (host) - проверяем начало IP адреса
-        ip_matches = any(
-            re.search(pattern, server_config.host) for pattern in self.config.tm2_allowed_ip_patterns
+        return any(
+            re.search(pattern, server_config.host) for pattern in self.config.tm_allowed_ip_patterns
         )
-        if not ip_matches:
-            return False
-        
-        # Все обязательные критерии выполнены
-        return True
 
 
 class ConfigDownloader:
@@ -548,19 +484,17 @@ class ConfigProcessor:
         """Обрабатывает все конфигурации."""
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
         tm_lines: List[str] = []
-        tm2_lines: List[str] = []
 
         for filename, url in self.config.config_urls.items():
             try:
                 original_text = self.downloader.download(url)
                 lines = [line.rstrip("\n") for line in original_text.splitlines()]
 
-                filtered_lines, file_tm_lines, file_tm2_lines = await self.filter.filter_lines(lines)
+                filtered_lines, file_tm_lines = await self.filter.filter_lines(lines)
 
-                # Собираем записи для TM.txt и TM2.txt только из указанного файла
+                # Собираем записи для TM.txt только из указанного файла
                 if filename == self.config.tm_source_file:
                     tm_lines.extend(file_tm_lines)
-                    tm2_lines.extend(file_tm2_lines)
 
                 output_path = self.config.output_dir / filename
                 output_text = "\n".join(filtered_lines) + ("\n" if filtered_lines else "")
@@ -571,9 +505,8 @@ class ConfigProcessor:
                 logger.warning(f"Skipping {filename} due to download error")
                 continue
 
-        # Создаем TM.txt и TM2.txt
+        # Создаем TM.txt
         self._create_tm_file(tm_lines)
-        self._create_tm2_file(tm2_lines)
 
     def _create_tm_file(self, tm_lines: List[str]) -> None:
         """Создает файл TM.txt."""
@@ -584,16 +517,6 @@ class ConfigProcessor:
             logger.info(f"Created {tm_path} ({len(tm_lines)} lines)")
         else:
             logger.info("No entries for TM.txt")
-
-    def _create_tm2_file(self, tm2_lines: List[str]) -> None:
-        """Создает файл TM2.txt."""
-        if tm2_lines:
-            tm2_path = self.config.output_dir / "TM2.txt"
-            tm2_content = "\n".join(tm2_lines) + "\n"
-            tm2_path.write_text(tm2_content, encoding="utf-8")
-            logger.info(f"Created {tm2_path} ({len(tm2_lines)} lines)")
-        else:
-            logger.info("No entries for TM2.txt")
 
 
 async def main_async() -> None:
