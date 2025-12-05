@@ -506,10 +506,6 @@ class ConfigFilter:
         """
         config = server_config.config
         
-        # Проверка порта
-        if server_config.port not in self.config.tm2_allowed_ports:
-            return False
-        
         # Проверка IP-адреса (host) - проверяем начало IP адреса
         ip_matches = any(
             re.search(pattern, server_config.host) for pattern in self.config.tm2_allowed_ip_patterns
