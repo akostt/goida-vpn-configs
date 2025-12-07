@@ -121,6 +121,7 @@ vless://ed159d76-80be-4e34-aa56-a5f14c28bbfc@brenna.ns.cloudflare.com:443?encryp
 vless://504f4add-e233-454c-a45d-daffaeaa6081@brenna.ns.cloudflare.com:443?encryption=none&amp;security=tls&amp;sni=639003600953613625.insight-amsit.info&amp;type=ws&amp;host=639003600953613625.insight-amsit.info&amp;path=/fxywhnws#🇫🇮[openproxylist.com] vless-FI
 vless://d350b8d9-e7cb-4e81-a189-73b15ee487a3@delilah.ns.cloudflare.com:443?encryption=none&security=tls&sni=639003456253078972.defender-amsis.info&type=ws&host=639003456253078972.defender-amsis.info&path=/oypliwws#🇫🇮[openproxylist.com] vless-FI
 vless://2b066334-ca87-4c56-9a79-2f3636ee53d1@betty.ns.cloudflare.com:443?encryption=none&amp;security=tls&amp;sni=639003456251297706.renegade-amsis.info&amp;type=ws&amp;host=639003456251297706.renegade-amsis.info&amp;path=/dahdwsws#🇪🇸[openproxylist.com] vless-ES
+trojan://79314e99f0a473fe86efc7827942ad00@160.16.150.76:1596?security=tls&sni=www.nintendogames.net#🇸🇬[openproxylist.com] trojan-SG
 trojan://79314e99f0a473fe86efc7827942ad00@160.16.144.208:3145?security=tls&sni=www.nintendogames.net#🇸🇬[openproxylist.com] trojan-SG
 trojan://BxceQaOe@58.152.30.120:443?security=tls&sni=t.me%2Fripaojiedian#🏳[openproxylist.com] trojan-
 vless://e9db60cd-83df-430a-960e-b77c56dc6ede@norman.ns.cloudflare.com:443?encryption=none&security=tls&sni=639003456258253450.mustang-amsit.info&type=ws&host=639003456258253450.mustang-amsit.info&path=/lzummpws#🇺🇸[openproxylist.com] vless-US
