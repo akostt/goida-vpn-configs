@@ -103,6 +103,7 @@ vless://f021325f-867c-476b-b7bc-9d78d594c57a@147.45.234.51:443?security=reality&
 vless://dfac7622-66ca-4efe-9976-76f04f4e5d8b@m65a.vip784.com:33801?security=&encryption=none&host=varzesh3.ir&headerType=http&type=tcp#🇩🇪[openproxylist.com] vless-DE
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpvWklvQTY5UTh5aGNRVjhrYTNQYTNB@193.29.139.140:8080#🇳🇱[openproxylist.com] ss-NL
 trojan://92690597d6298061459918a371e8d77d@47.242.225.242:443?security=tls&sni=hezijiasuqi.com#🇭🇰[openproxylist.com] trojan-HK
+vless://e50fa46f-20c6-4c0d-fa0e-d9ffd92df36f@91.107.130.76:41647?flow=&type=grpc&mode=gun&serviceName=&security=none#🇩🇪[openproxylist.com] vless-DE
 vless://6ba2eac6-0ec9-44ca-a42b-a8e23aafb530@204.216.216.23:1114?security=reality&encryption=none&pbk=WfkCF0eEuIoO0MyJsKOddU89QrTzCZ4y2dzCJbH99CQ&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=yahoo.com&sid=79a1e14b#🇮🇹[openproxylist.com] vless-IT
 trojan://BxceQaOe@58.152.25.242:443?security=tls&sni=t.me%25252Fripaojiedian#🇭🇰[openproxylist.com] trojan-HK
 trojan://79314e99f0a473fe86efc7827942ad00@160.16.131.243:2890?security=tls&sni=www.nintendogames.net#🇺🇸[openproxylist.com] trojan-US
