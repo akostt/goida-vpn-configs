@@ -123,6 +123,7 @@ vless://d7e2c1ec-b2ba-4a4c-a73a-c08f5bd7923b@45.92.176.55:2243?security=reality&
 vless://88538870-5626-4cd7-9cda-1e0b6253c9ce@www.speedtest.net:443?path=%2F&amp;security=tls&amp;encryption=none&amp;host=kalam.mrconfigur.site&amp;type=ws&amp;sni=kalam.mrconfigur.site#🇩🇪[openproxylist.com] vless-DE
 vless://95b1344a-2b59-419f-ab7d-2ff7e5c6aa34@91.99.190.62:443?mode=gun&security=none&encryption=none&type=grpc#🇩🇪[openproxylist.com] vless-DE
 vless://2ee2a715-d541-416a-8713-d66567448c2e@91.98.155.240:443?mode=gun&amp;security=none&amp;encryption=none&amp;type=grpc#🇩🇪[openproxylist.com] vless-DE
+ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpZUUNTS29DRjNRYXpXOFlsdkRCV0E0@109.71.246.210:56689#🇳🇱[openproxylist.com] ss-NL
 vless://53fff6cc-b4ec-43e8-ade5-e0c42972fc33@37.120.184.180:80?path=%2Fnews&amp;security=&amp;encryption=none&amp;host=cdn.ir&amp;type=ws#🇩🇪[openproxylist.com] vless-DE
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpBUmd2R1p5d0ErZ2FjZ0dWMjZCdm11MDUrd1ptUlcvaitBZFUrWjhCdDQ0PQ@156.59.243.6:990#🇵🇰[openproxylist.com] ss-PK
 trojan://BxceQaOe@58.152.25.20:443?security=tls&sni=t.me%25252Fripaojiedian#🇭🇰[openproxylist.com] trojan-HK
