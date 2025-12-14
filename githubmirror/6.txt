@@ -16,9 +16,9 @@ vless://2ca07504-c06a-41a4-b26b-99807a7d24cf@us01-vlr01-gmn03.vpnvezdehod.net:44
 vless://011fb39c-15ed-4700-a338-67497533f94e@217.16.24.53:443?security=reality&type=tcp&sni=www.vk.com&fp=chrome&flow=xtls-rprx-vision&sid=69f3807321&pbk=wECjZXPpzOIAcE2my_sCH2zluFB4p9a3jpTugXhJ7gI&encryption=none#🇳🇱[openproxylist.com] vless-NL
 trojan://BxceQaOe@58.152.18.155:443?allowInsecure=1&sni=t.me%2Fripaojiedian#🇭🇰[openproxylist.com] trojan-HK
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@15.204.247.49:12000#🇺🇸[openproxylist.com] ss-US
+vless://c492f234-08b0-492b-a898-72b7b25d17b8@94.131.104.155:443?security=reality&encryption=none&pbk=JbbVqSXwW17otLCj-6E7t9R5BNTYFgarOXT6At4Yz2s&headerType=none&fp=firefox&spx=%2Fsinavm_sinavm&type=tcp&flow=xtls-rprx-vision&sni=latvia10.clearorbitllc.com&sid=3196e860#🇱🇻[openproxylist.com] vless-LV
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpiQ1pMc2w4MFNMTHFrbGpXUzd5Ums4@45.88.183.124:25578#🇮🇳[openproxylist.com] ss-IN
 vless://78fc9ba9-9c68-4b49-891f-ea9e38bd3b56@202.85.53.160:7000?&security=tls&fp=random&sni=ak.suoni.nyc.mn&type=ws&headerType=none&host=ak.suoni.nyc.mn&path=%2Fproxyip%3Dsjc.o00o.ooo#🇨🇦[openproxylist.com] vless-CA
-vless://2ee2a715-d541-416a-8713-d66567448c2e@91.98.148.160:443?type=grpc&amp;encryption=none&amp;serviceName=&amp;authority=&amp;security=none#🇩🇪[openproxylist.com] vless-DE
 vless://48ff2b70-e180-582f-8866-d9a2edeed5f5@57.129.53.180:23576?security=reality&encryption=none&pbk=1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s&headerType=none&fp=chrome&spx=%2F---Join---PLANB_NET---Join---PLANB_NET---Join---PLANB_NET---Join---PLANB_NET---Join---PLANB_NET---Join---PLANB_NET---Join---PLANB_NET---Join---PLANB_NET&type=tcp&flow=xtls-rprx-vision&sni=fuck.rkn&sid=01#🇩🇪[openproxylist.com] vless-DE
 vless://e50fa46f-20c6-4c0d-fa0e-d9ffd92df36f@91.107.130.214:41647?mode=gun&security=none&encryption=none&type=grpc#🇩🇪[openproxylist.com] vless-DE
 vless://fba4e0e0-118c-431f-9f6a-4cfc99f39de8@zoom.seaseus.pp.ua:443?&security=tls&fp=chrome&alpn=h3&sni=zoom.seaseus.pp.ua&type=ws&headerType=none&host=zoom.seaseus.pp.ua&path=%2Fseaseus#🇱🇰[openproxylist.com] vless-LK
@@ -114,7 +114,6 @@ vless://2ee2a715-d541-416a-8713-d66567448c2e@91.99.27.92:443?mode=gun&security=n
 trojan://76d630f2af6619c4a5de0ef953df3c6a@160.16.153.13:3145?security=tls&sni=www.nintendogames.net#🇸🇬[openproxylist.com] trojan-SG
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpKR3Y2MTZoTVdkamZ1WjAwallmcTdYa0JISlpyT0JyZw==@87.121.162.249:443#🇩🇪[openproxylist.com] ss-DE
 vless://d29bde62-daa4-4804-9c69-6e23a4150006@45.92.176.55:1243?security=reality&encryption=none&pbk=jcJeCbLo5JtfveFIQLV6WNm1148XzxDc0Rzy336hXy0&headerType=&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=rontgen.fasssst.ru&sid=ff3cef7cdcf9#🇪🇪[openproxylist.com] vless-EE
-vless://d7e2c1ec-b2ba-4a4c-a73a-c08f5bd7923b@45.92.176.55:2243?security=reality&encryption=none&pbk=_ee-ouMazAzx7Q4_cYhWbu6pw53-8VVpt7tuBuCXziU&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=rontgen.fasssst.ru&sid=e3cbc70477#🇩🇰[openproxylist.com] vless-DK
 vless://88538870-5626-4cd7-9cda-1e0b6253c9ce@www.speedtest.net:443?path=%2F&amp;security=tls&amp;encryption=none&amp;host=kalam.mrconfigur.site&amp;type=ws&amp;sni=kalam.mrconfigur.site#🇩🇪[openproxylist.com] vless-DE
 vless://95b1344a-2b59-419f-ab7d-2ff7e5c6aa34@91.99.190.62:443?mode=gun&security=none&encryption=none&type=grpc#🇩🇪[openproxylist.com] vless-DE
 vless://2ee2a715-d541-416a-8713-d66567448c2e@91.98.155.240:443?mode=gun&security=none&encryption=none&type=grpc#🇩🇪[openproxylist.com] vless-DE
