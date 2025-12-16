@@ -2,21 +2,25 @@
 
 Скачивает VPN конфигурации из исходного репозитория, проверяет доступность серверов
 и сохраняет только рабочие конфигурации. Также создает специальный файл TM.txt
-с отфильтрованными записями из 26.txt.
+с отфильтрованными записями из 26.txt, которые соответствуют заданным IP-диапазонам.
+Для доменных имён выполняется DNS резолв с последующей проверкой IP адреса.
 """
 import asyncio
 import base64
 import contextlib
+import ipaddress
 import json
 import logging
 import os
 import re
+import socket
 import uuid
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Protocol, Tuple
+from typing import Dict, List, Optional, Protocol, Tuple
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -50,6 +54,7 @@ class AppConfig:
     retry_delay: float = field(default_factory=lambda: float(os.getenv("VPN_CHECK_RETRY_DELAY", "0.3")))
     max_retries: int = field(default_factory=lambda: int(os.getenv("VPN_CHECK_MAX_RETRIES", "1")))
     download_timeout: int = field(default_factory=lambda: int(os.getenv("VPN_DOWNLOAD_TIMEOUT", "15")))
+    dns_timeout: float = field(default_factory=lambda: float(os.getenv("DNS_RESOLVER_TIMEOUT", "3.0")))
 
     config_urls: Dict[str, str] = field(
         default_factory=lambda: {
@@ -76,9 +81,13 @@ class AppConfig:
             r"151\.236\.93\."
         ]
     )
+    _compiled_patterns: List[re.Pattern] = field(init=False, repr=False)
 
     def __post_init__(self):
         object.__setattr__(self, "output_dir", self.base_dir / "githubmirror")
+        # Компилируем regex паттерны для оптимизации
+        compiled = [re.compile(pattern) for pattern in self.tm_allowed_ip_patterns]
+        object.__setattr__(self, "_compiled_patterns", compiled)
 
 
 @dataclass(frozen=True)
@@ -381,13 +390,83 @@ class ServerChecker:
             return False
 
 
+class DNSResolver:
+    """Асинхронный резолвер DNS с кэшированием."""
+
+    def __init__(self, timeout: float = 3.0, max_workers: int = 10):
+        self.timeout = timeout
+        self._cache: Dict[str, Optional[str]] = {}
+        self._executor: Optional[ThreadPoolExecutor] = ThreadPoolExecutor(
+            max_workers=max_workers, thread_name_prefix="dns_resolver"
+        )
+
+    async def resolve(self, hostname: str) -> Optional[str]:
+        """Резолвит доменное имя в IP адрес."""
+        if hostname in self._cache:
+            return self._cache[hostname]
+
+        if not self._executor:
+            return None
+
+        try:
+            loop = asyncio.get_event_loop()
+            ip = await asyncio.wait_for(
+                loop.run_in_executor(self._executor, self._resolve_sync, hostname),
+                timeout=self.timeout,
+            )
+            self._cache[hostname] = ip
+            return ip
+        except (asyncio.TimeoutError, OSError, socket.gaierror) as e:
+            logger.debug(f"DNS resolution failed for {hostname}: {e}")
+            self._cache[hostname] = None
+            return None
+
+    @staticmethod
+    def _resolve_sync(hostname: str) -> Optional[str]:
+        """Синхронный DNS резолв."""
+        try:
+            return socket.gethostbyname(hostname)
+        except (OSError, socket.gaierror):
+            return None
+
+    @staticmethod
+    def is_ip_address(host: str) -> bool:
+        """Проверяет, является ли строка IP адресом."""
+        try:
+            ipaddress.ip_address(host)
+            return True
+        except ValueError:
+            return False
+
+    def close(self) -> None:
+        """Закрывает executor."""
+        if self._executor:
+            self._executor.shutdown(wait=False)
+            self._executor = None
+
+    async def __aenter__(self):
+        """Асинхронный context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Асинхронный context manager exit."""
+        self.close()
+
+
 class ConfigFilter:
     """Класс для фильтрации конфигураций."""
 
-    def __init__(self, config: AppConfig, parser_registry: ConfigParserRegistry, server_checker: ServerChecker):
+    def __init__(
+        self,
+        config: AppConfig,
+        parser_registry: ConfigParserRegistry,
+        server_checker: ServerChecker,
+        dns_resolver: DNSResolver,
+    ):
         self.config = config
         self.parser_registry = parser_registry
         self.server_checker = server_checker
+        self.dns_resolver = dns_resolver
         self.session_cache: Dict[str, bool] = {}
 
     async def filter_lines(self, lines: List[str]) -> Tuple[List[str], List[str]]:
@@ -411,7 +490,7 @@ class ConfigFilter:
             if server_config.cache_key in self.session_cache:
                 if self.session_cache[server_config.cache_key]:
                     kept_lines[idx] = line
-                    if self._should_add_to_tm(server_config):
+                    if await self._should_add_to_tm(server_config):
                         tm_lines.append(line)
                 continue
 
@@ -441,18 +520,30 @@ class ConfigFilter:
 
         if is_alive:
             kept_lines[idx] = server_config.original_line
-            if self._should_add_to_tm(server_config):
+            if await self._should_add_to_tm(server_config):
                 tm_lines.append(server_config.original_line)
 
-    def _should_add_to_tm(self, server_config: ServerConfig) -> bool:
+    async def _should_add_to_tm(self, server_config: ServerConfig) -> bool:
         """Проверяет, соответствует ли сервер критериям для TM.txt.
         
-        Критерий: IP-адрес входит в доверенный пул.
+        Критерий: IP-адрес (или IP адрес доменного имени) входит в доверенный пул.
         """
-        # Проверка IP-адреса (host) - проверяем начало IP адреса
-        return any(
-            re.search(pattern, server_config.host) for pattern in self.config.tm_allowed_ip_patterns
-        )
+        host = server_config.host
+
+        # Если это IP адрес - проверяем напрямую
+        if DNSResolver.is_ip_address(host):
+            return self._matches_ip_patterns(host)
+
+        # Если это доменное имя - резолвим и проверяем IP
+        resolved_ip = await self.dns_resolver.resolve(host)
+        if resolved_ip:
+            return self._matches_ip_patterns(resolved_ip)
+
+        return False
+
+    def _matches_ip_patterns(self, ip: str) -> bool:
+        """Проверяет, соответствует ли IP адрес паттернам."""
+        return any(pattern.search(ip) for pattern in self.config._compiled_patterns)
 
 
 class ConfigDownloader:
@@ -480,35 +571,39 @@ class ConfigProcessor:
         self.parser_registry = ConfigParserRegistry()
         self.server_checker = ServerChecker(config)
         self.downloader = ConfigDownloader(config)
-        self.filter = ConfigFilter(config, self.parser_registry, self.server_checker)
+        self.dns_resolver = DNSResolver(timeout=config.dns_timeout)
+        self.filter = ConfigFilter(config, self.parser_registry, self.server_checker, self.dns_resolver)
 
     async def process_all(self) -> None:
         """Обрабатывает все конфигурации."""
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
         tm_lines: List[str] = []
 
-        for filename, url in self.config.config_urls.items():
-            try:
-                original_text = self.downloader.download(url)
-                lines = [line.rstrip("\n") for line in original_text.splitlines()]
+        try:
+            for filename, url in self.config.config_urls.items():
+                try:
+                    original_text = self.downloader.download(url)
+                    lines = [line.rstrip("\n") for line in original_text.splitlines()]
 
-                filtered_lines, file_tm_lines = await self.filter.filter_lines(lines)
+                    filtered_lines, file_tm_lines = await self.filter.filter_lines(lines)
 
-                # Собираем записи для TM.txt только из указанного файла
-                if filename == self.config.tm_source_file:
-                    tm_lines.extend(file_tm_lines)
+                    # Собираем записи для TM.txt только из указанного файла
+                    if filename == self.config.tm_source_file:
+                        tm_lines.extend(file_tm_lines)
 
-                output_path = self.config.output_dir / filename
-                output_text = "\n".join(filtered_lines) + ("\n" if filtered_lines else "")
-                output_path.write_text(output_text, encoding="utf-8")
-                logger.info(f"Updated {output_path} ({len(filtered_lines)} lines)")
+                    output_path = self.config.output_dir / filename
+                    output_text = "\n".join(filtered_lines) + ("\n" if filtered_lines else "")
+                    output_path.write_text(output_text, encoding="utf-8")
+                    logger.info(f"Updated {output_path} ({len(filtered_lines)} lines)")
 
-            except requests.RequestException:
-                logger.warning(f"Skipping {filename} due to download error")
-                continue
+                except requests.RequestException:
+                    logger.warning(f"Skipping {filename} due to download error")
+                    continue
 
-        # Создаем TM.txt
-        self._create_tm_file(tm_lines)
+            # Создаем TM.txt
+            self._create_tm_file(tm_lines)
+        finally:
+            self.dns_resolver.close()
 
     def _create_tm_file(self, tm_lines: List[str]) -> None:
         """Создает файл TM.txt."""
