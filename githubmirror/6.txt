@@ -76,6 +76,7 @@ vless://9c79aceb-4649-44ea-9698-b5e9ecf6d6da@156.229.161.107:10001?type=tcp&encr
 vless://238ec685-7c8f-44dd-a6e4-906020d9b3ab@178.62.226.192:32200?encryption=none&amp;type=grpc&amp;serviceName=ZEDMODEON-ZEDMODEON-bia-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON&amp;packetEncoding=xudp#🇳🇱[openproxylist.com] vless-NL
 trojan://BxceQaOe@219.79.214.159:443?sni=t.me%25252Fripaojiedian#🇭🇰[openproxylist.com] trojan-HK
 vless://197092b3-e995-48b7-a34b-d32eb75b62e1@194.150.166.134:17166?security=none&amp;encryption=none&amp;headerType=none&amp;type=tcp#🇬🇧[openproxylist.com] vless-GB
+ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpucWNJZllIbHBNbjNqenFrTkRqS2FH@138.124.67.26:25572#🇺🇦[openproxylist.com] ss-UA
 vless://3d617588-ae06-4379-bed9-60b6bac8dbdc@141.98.169.100:443?path=%2Foyoelzws&amp;security=tls&amp;encryption=none&amp;insecure=1&amp;type=ws&amp;allowInsecure=1&amp;sni=www.vk.com#🇫🇮[openproxylist.com] vless-FI
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpxZHBNNFJPdm9MdGF5aTdOTjlESUlk@194.156.103.148:443#🇦🇲[openproxylist.com] ss-AM
 vless://88872588-2a25-47f9-b498-79142565a239@45.67.228.224:443?path=%2Fufhqdyws&amp;security=tls&amp;encryption=none&amp;type=ws#🇳🇱[openproxylist.com] vless-NL
@@ -87,7 +88,6 @@ vless://48ff2b70-e180-582f-8866-d9a2edeed5f5@51.158.206.93:23576?security=realit
 vless://48ff2b70-e180-582f-8866-d9a2edeed5f5@51.158.206.29:23576?security=reality&type=tcp&sni=fuck.rkn&fp=chrome&flow=xtls-rprx-vision&sid=01&pbk=1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s&encryption=none#🇳🇱[openproxylist.com] vless-NL
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpnS1l5Z1RjUlloYzNza2MyeDZ0WjA3M2xZejBEbmllWA@5.181.21.246:443#🇦🇹[openproxylist.com] ss-AT
 vless://48ff2b70-e180-582f-8866-d9a2edeed5f5@51.158.206.25:23576?security=reality&type=tcp&sni=fuck.rkn&fp=chrome&flow=xtls-rprx-vision&sid=01&pbk=1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s&encryption=none#🇳🇱[openproxylist.com] vless-NL
-vless://2ee2a715-d541-416a-8713-d66567448c2e@91.99.210.212:443?mode=gun&amp;security=none&amp;encryption=none&amp;type=grpc#🇩🇪[openproxylist.com] vless-DE
 vless://0062f09d-9579-4722-9bd3-d5438970d54a@us7.candyfans.win:443?path=/jqliws&security=tls&encryption=none&insecure=1&host=us7.candyfans.win&type=ws&allowInsecure=1&sni=us7.candyfans.win#🇱🇺[openproxylist.com] vless-LU
 vless://cd19d8ac-5cf2-4a4a-8e67-2f1ccd704d65@movivoolom.movementvip.ir:2025?security=reality&amp;encryption=none&amp;pbk=-GSgOuj1kNP1sHwIVEHEwL9ZhGMRLlsBcqOGNhLVIkA&amp;headerType=none&amp;fp=chrome&amp;type=tcp&amp;sni=movivoolom.movementvip.ir&amp;sid=062f0288c08c#🇩🇪[openproxylist.com] vless-DE
 trojan://90y2l3mu48d10uy3ibad@195.154.202.25:58290?security=tls&sni=ads.x5.ru#🇫🇷[openproxylist.com] trojan-FR
