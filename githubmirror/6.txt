@@ -1,6 +1,5 @@
 trojan://telegram-id-privatevpns@51.44.123.219:22222?security=tls&alpn=http%2F1.1&headerType=none&type=tcp&sni=trojan.burgerip.co.uk#🇫🇷[openproxylist.com] trojan-FR
 trojan://telegram-id-privatevpns@13.37.120.137:22222?security=tls&alpn=http%2F1.1&headerType=none&type=tcp&sni=trojan.burgerip.co.uk#🇫🇷[openproxylist.com] trojan-FR
-vless://309fa273-6579-4cb2-9143-7cad50401eba@5.253.41.52:8443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.cloudflare.com&fp=chrome&pbk=gZGVp5PUdafgsmi1gawa1yLuha_XhXRc_W9SvPiGmTY&sid=7cad5040&allowInsecure=1&type=tcp&headerType=none#🇯🇵[openproxylist.com] vless-JP
 vless://65094902-5425-464d-9171-d3a69d9e1cbc@45.150.128.215:80?encryption=none&security=none&type=ws&host=t.me/v2Line&path=/#🇹🇭[openproxylist.com] vless-TH
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@15.204.247.49:12000#🇺🇸[openproxylist.com] ss-US
 vless://f0a44f8f-c01f-490c-a6eb-29106a2509a4@3.143.235.221:32252?mode=gun&security=tls&alpn=h2,http/1.1&encryption=none&type=grpc&serviceName=www.bing.com&sni=3.143.235.221#🇺🇸[openproxylist.com] vless-US
