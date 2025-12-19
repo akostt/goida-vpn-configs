@@ -7,6 +7,7 @@ vless://aee540f8-fb73-4ee7-98f9-125d4d1d41ff@tr2.tunnely.ru:443?security=reality
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@57.128.214.100:12000#🇩🇪[openproxylist.com] ss-DE
 vless://33f4ca29-6404-42de-8ca7-18846dbf5dcc@141.98.169.94:443?path=%2Fpuzoscws&amp;security=tls&amp;encryption=none&amp;type=ws#🇫🇮[openproxylist.com] vless-FI
 vless://e615a5ba-fce3-4ffa-9c86-b0327a8a107a@185.235.241.166:443?path=%2Fhormoz&amp;security=tls&amp;encryption=none&amp;type=ws#🇩🇪[openproxylist.com] vless-DE
+vless://f0ddd524-5089-48c8-804c-3f72b89d4a31@freeConfig.nimroo.org:443?security=reality&type=tcp&sni=tgju.org&fp=firefox&flow=xtls-rprx-vision&sid=06c2bb0de4e52af8&pbk=6P4admqWX-DD6_T5NFsB2osOSvGpMOUpOi7wPF20yQ0&encryption=none#🇩🇪[openproxylist.com] vless-DE
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@144.217.164.29:12000#🇬🇧[openproxylist.com] ss-GB
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@57.128.214.100:12000#🇩🇪[openproxylist.com] ss-DE
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@144.217.164.29:12000#🇬🇧[openproxylist.com] ss-GB
@@ -38,7 +39,6 @@ vless://65094902-5425-464d-9171-d3a69d9e1cbc@45.150.128.215:80?encryption=none&s
 vless://f0a44f8f-c01f-490c-a6eb-29106a2509a4@3.143.235.221:32252?mode=gun&security=tls&alpn=h2,http/1.1&encryption=none&type=grpc&serviceName=www.bing.com&sni=3.143.235.221#🇺🇸[openproxylist.com] vless-US
 vless://48ff2b70-e180-582f-8866-d9a2edeed5f5@57.129.53.181:23576?security=reality&encryption=none&pbk=1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=fuck.rkn&sid=01#🇩🇪[openproxylist.com] vless-DE
 vless://e615a5ba-fce3-4ffa-9c86-b0327a8a107a@94.131.110.128:443?path=%2Fhormoz&amp;security=tls&amp;encryption=none&amp;type=ws&amp;sni=ozon.ru#🇩🇪[openproxylist.com] vless-DE
-trojan://telegram-id-privatevpns@63.181.140.175:22222?security=tls&alpn=http%2F1.1&headerType=none&type=tcp&sni=trojan.burgerip.co.uk#🇩🇪[openproxylist.com] trojan-DE
 vless://beb0de6b-9494-4715-a1d0-f2e4064116b1@85.209.153.125:443?path=%2Farfdccws&amp;security=tls&amp;encryption=none&amp;type=ws#🇺🇸[openproxylist.com] vless-US
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpBUmd2R1p5d0ErZ2FjZ0dWMjZCdm11MDUrd1ptUlcvaitBZFUrWjhCdDQ0PQ@38.60.250.107:990#🇩🇪[openproxylist.com] ss-DE
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpsNjY4WEhQZWpvU05OdUQ2NkJZenllaGFDcFpleGlGNw@45.12.136.170:443#🇱🇹[openproxylist.com] ss-LT
@@ -130,7 +130,6 @@ vless://b52fac66-fd92-47ae-b1f6-332aa1c353d9@57.180.50.81:37390?&security=tls&sn
 vless://47867494-9509-4c32-a90a-e9253b033279@fn11.irsbv2.ir:443?path=%2F&amp;security=none&amp;encryption=none&amp;host=cloudflare.com&amp;type=ws#🇫🇮[openproxylist.com] vless-FI
 vless://a0e804c3-55e2-4d51-82c7-33976d6748cb@31.57.225.233:443?security=reality&encryption=none&pbk=qFBIVGsvXTMeJcdJz6GiL7DG0XNhCg7rItza7t0qTgU&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=google.com&sid=9eb31eb7572c0882#🇹🇷[openproxylist.com] vless-TR
 vless://88f41020-5b41-4051-9a18-c60fcf79a828@209.38.218.66:45417?encryption=none&type=grpc&serviceName=ZEDMODEON-ZEDMODEON-bia-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON-ZEDMODEON&packetEncoding=xudp#🇩🇪[openproxylist.com] vless-DE
-vless://95b1344a-2b59-419f-ab7d-2ff7e5c6aa34@91.98.93.136:443?mode=gun&security=none&encryption=none&type=grpc#🇩🇪[openproxylist.com] vless-DE
 vless://f4e6e061-2a5b-41c4-b244-2f9202f05b43@141.98.169.102:443?path=%2Ftmvocqws&amp;security=tls&amp;encryption=none&amp;type=ws&amp;sni=www.vk.com#🇫🇮[openproxylist.com] vless-FI
 vless://0a0d846f-8f54-4db4-940b-b373b1b02e4c@94.131.100.173:443?path=%2Fcoxzfsws&amp;security=tls&amp;encryption=none&amp;host=639010645287857140.accord-lmnxa.info&amp;type=ws&amp;sni=www.vk.com#🇫🇮[openproxylist.com] vless-FI
 vless://eea96ff1-ce17-4c8c-964c-fa774ecb84f2@94.131.100.164:443?path=%2Fgfvfgzws&amp;security=tls&amp;encryption=none&amp;insecure=1&amp;type=ws&amp;allowInsecure=1&amp;sni=www.vk.com#🇫🇮[openproxylist.com] vless-FI
