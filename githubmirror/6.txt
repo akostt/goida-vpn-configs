@@ -3,7 +3,7 @@ vless://9a5414b6-20b7-4313-8cd4-693d3c19ec05@de.cdn.stun.su:443?security=reality
 vless://f788e136-b245-4617-9d41-b505c7f41ef9@deu196.unboundaccess.org:443?security=reality&encryption=none&pbk=BhTJ3phnq-Z-10aFKSsj1lzhA8mULR4L6leE4-0WTAs&headerType=none&fp=chrome&spx=%2F&type=tcp&flow=xtls-rprx-vision&sni=www.bing.com#🇺🇸[openproxylist.com] vless-US
 vless://c51fac89-9c57-4416-b48b-c780d6710605@de2.srv.oplcdn.link:8443?security=reality&encryption=none&pbk=SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc&headerType=none&fp=qq&type=tcp&flow=xtls-rprx-vision&sni=ign.com&sid=6ba85179e30d4fc2#🇩🇪[openproxylist.com] vless-DE
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@144.217.164.29:12000#🇬🇧[openproxylist.com] ss-GB
-trojan://telegram-id-privatevpns@63.181.215.244:22222?security=tls&alpn=http%2F1.1&headerType=none&type=tcp&sni=trojan.burgerip.co.uk#🇩🇪[openproxylist.com] trojan-DE
+trojan://telegram-id-privatevpns@63.181.124.153:22222?security=tls&alpn=http%2F1.1&headerType=none&type=tcp&sni=trojan.burgerip.co.uk#🇩🇪[openproxylist.com] trojan-DE
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@144.217.164.29:12000#🇬🇧[openproxylist.com] ss-GB
 vless://c257c4fd-149b-492f-9861-50f034779dd4@lovetea.parsianboton.ir:3002?security=none&encryption=none&headerType=none&type=tcp#🇩🇪[openproxylist.com] vless-DE
 ss://YWVzLTI1Ni1nY206OEpDc1Bzc2ZnUzh0aVJ3aU1saEFSZz09@144.217.164.29:12000#🇬🇧[openproxylist.com] ss-GB
@@ -43,6 +43,7 @@ vless://2ee2a715-d541-416a-8713-d66567448c2e@91.98.231.130:443?encryption=none&s
 vless://309fa273-6579-4cb2-9143-7cad50401eba@45.67.228.11:443?security=reality&amp;encryption=none&amp;pbk=gZGVp5PUdafgsmi1gawa1yLuha_XhXRc_W9SvPiGmTY&amp;headerType=none&amp;fp=chrome&amp;type=tcp&amp;flow=xtls-rprx-vision&amp;sni=www.cloudflare.com&amp;sid=7cad5040#🇳🇱[openproxylist.com] vless-NL
 vless://309fa273-6579-4cb2-9143-7cad50401eba@45.8.145.61:443?security=reality&amp;encryption=none&amp;pbk=gZGVp5PUdafgsmi1gawa1yLuha_XhXRc_W9SvPiGmTY&amp;headerType=none&amp;fp=chrome&amp;type=tcp&amp;flow=xtls-rprx-vision&amp;sni=www.cloudflare.com&amp;sid=7cad5040#🇳🇱[openproxylist.com] vless-NL
 vless://4d7a559b-6379-41a7-9e51-41ef759846aa@158.160.197.118:443?security=reality&encryption=none&pbk=TrAxIFIhSCc4C5IWnGvvAs2cSD_mVag1MlTCJPeLkGg&headerType=none&fp=chrome&spx=%2F---@External_Net---@External_Net---@External_Net---@External_Net---@External_Net&type=tcp&flow=xtls-rprx-vision&sni=ya.ru&sid=b9ceed646f470d2d#🇫🇮[openproxylist.com] vless-FI
+vless://c51fac89-9c57-4416-b48b-c780d6710605@ca.srv.oplcdn.link:8443?security=reality&encryption=none&pbk=SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc&headerType=none&fp=qq&type=tcp&flow=xtls-rprx-vision&sni=ign.com&sid=6ba85179e30d4fc2#🇨🇦[openproxylist.com] vless-CA
 vless://9efbff33-0318-4914-b78d-f47188b58875@141.98.169.104:443?path=%2Flwcnhxws&amp;security=tls&amp;encryption=none&amp;type=ws&amp;sni=ads.x5.ru#🇫🇮[openproxylist.com] vless-FI
 vless://47867494-9509-4c32-a90a-e9253b033279@fn11.irsbv2.ir:443?path=/?TELEGRAM-MARAMBASHI_MARAMBASHI_MARAMBASHI_MARAMBASHI_MARAMBASHI?ed=512&security=none&encryption=none&host=cloudflare.com&type=ws#🇫🇮[openproxylist.com] vless-FI
 trojan://cTv.9PDdCt-wybBrG1qlxI5UJuaEj@167.17.185.228:10889?security=tls&amp;sni=web.max&amp;allowInsecure=true&amp;fp=chrome#🇮🇸[openproxylist.com] trojan-IS
@@ -86,6 +87,7 @@ ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpOMk5rTw@us1.opensocks.site:1443#🇺🇸[ope
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpBUmd2R1p5d0ErZ2FjZ0dWMjZCdm11MDUrd1ptUlcvaitBZFUrWjhCdDQ0PQ==@79.127.200.169:990#🇨🇦[openproxylist.com] ss-CA
 vless://e615a5ba-fce3-4ffa-9c86-b0327a8a107a@185.235.241.132:443?encryption=none&amp;security=tls&amp;allowInsecure=true&amp;type=ws&amp;path=/hormoz&amp;packetEncoding=xudp#🇩🇪[openproxylist.com] vless-DE
 vless://e615a5ba-fce3-4ffa-9c86-b0327a8a107a@185.235.241.122:443?path=%2Fhormoz&amp;security=tls&amp;encryption=none&amp;type=ws#🇩🇪[openproxylist.com] vless-DE
+vless://92d12a33-19c1-487c-b7e0-122014793fce@212.134.174.249:48778?security=reality&amp;encryption=none&amp;pbk=W8s0O7u6tZqZcYjy53w-_O2PZyO_HjUNIJTKFNMkyQM&amp;headerType=none&amp;fp=chrome&amp;type=tcp&amp;flow=xtls-rprx-vision&amp;sni=apple.com&amp;sid=cc82826f#🇬🇧[openproxylist.com] vless-GB
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpBUmd2R1p5d0ErZ2FjZ0dWMjZCdm11MDUrd1ptUlcvaitBZFUrWjhCdDQ0PQ==@185.213.23.63:990#🇳🇴[openproxylist.com] ss-NO
 vless://50343a81-a35e-44b9-a6a6-0b7dd6711ed4@141.98.169.101:443?path=%2Fufkipews&security=tls&encryption=none&insecure=1&host=%2F%3FBIA_TELEGRAM%40MARAMBASHI_MARAMBASHI_MARAMBASHI_MARAMBASHI_MARAMBASHI&type=ws&allowInsecure=1#🇫🇮[openproxylist.com] vless-FI
 vless://e615a5ba-fce3-4ffa-9c86-b0327a8a107a@185.218.3.9:443?encryption=none&amp;security=tls&amp;allowInsecure=true&amp;type=ws&amp;path=/hormoz&amp;packetEncoding=xudp#🇬🇧[openproxylist.com] vless-GB
