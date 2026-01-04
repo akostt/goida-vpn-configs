@@ -2,7 +2,7 @@ name: Update VPN configs
 
 on:
   schedule:
-    - cron: "*/16 * * * *"
+    - cron: "*/9 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   update-configs:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 8
 
     steps:
       - name: Checkout repository
@@ -44,7 +44,7 @@ jobs:
       - name: Update VPN configs
         run: |
           export V2RAY_PATH=/usr/local/bin/xray
-          export VPN_MAX_TOTAL_TIME=900
+          export VPN_MAX_TOTAL_TIME=450
           python scripts/update_configs.py
 
       - name: Commit and push changes
