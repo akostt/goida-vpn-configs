@@ -75,14 +75,13 @@ class AppConfig:
         default_factory=lambda: int(os.getenv("SOCKS_PROXY_PORT_START", "20000"))
     )
     max_total_time: float = field(
-        default_factory=lambda: float(os.getenv("VPN_MAX_TOTAL_TIME", "480.0"))  # 8 минут по умолчанию
+        default_factory=lambda: float(os.getenv("VPN_MAX_TOTAL_TIME", "900.0"))  # 15 минут по умолчанию
     )
 
     config_urls: Dict[str, str] = field(
         default_factory=lambda: {
             "6.txt": "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/6.txt",
             "22.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/22.txt",
-            "23.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/23.txt",
             "24.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/24.txt",
             "25.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/25.txt",
             "26.txt": "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/26.txt",
